@@ -37,7 +37,7 @@ export default function UploadView({ onDataLoaded }: UploadViewProps) {
   }, [handleFile]);
 
   const handleLoadSample = () => {
-    const points = generateSampleTrajectory(500);
+    const points = generateSampleTrajectory(750);
     setStatus('success');
     setFileName('sample_trajectory.csv');
     onDataLoaded(points, 'sample_trajectory.csv');
@@ -76,7 +76,7 @@ export default function UploadView({ onDataLoaded }: UploadViewProps) {
           </div>
           <div>
             <p className="font-semibold">Drop your trajectory file here</p>
-            <p className="text-sm text-muted-foreground mt-1">CSV with lat, lng, timestamp columns • Max 50MB</p>
+            <p className="text-sm text-muted-foreground mt-1">CSV with lat, lng, timestamp, location_type columns • Max 50MB</p>
           </div>
         </div>
       </motion.div>
@@ -116,18 +116,23 @@ export default function UploadView({ onDataLoaded }: UploadViewProps) {
           Don't have trajectory data? Load a sample dataset to explore PrivTraj's capabilities.
         </p>
         <Button onClick={handleLoadSample} variant="outline" className="glow-border">
-          Load Sample Dataset (500 points)
+          Load Sample Dataset (750 points)
         </Button>
       </div>
 
       <div className="glass-card rounded-lg p-5">
         <h3 className="text-sm font-semibold mb-3">Expected CSV Format</h3>
         <pre className="text-xs font-mono text-muted-foreground bg-secondary/50 rounded-md p-3 overflow-x-auto">
-{`latitude,longitude,timestamp,user_id
-40.7128,-74.0060,2024-01-15T08:30:00,user_1
-40.7135,-74.0055,2024-01-15T08:31:00,user_1
-40.7140,-74.0048,2024-01-15T08:32:00,user_2`}
+{`latitude,longitude,timestamp,user_id,location_type
+40.7128,-74.0060,2024-01-15T08:30:00,user_1,office
+40.7135,-74.0055,2024-01-15T08:31:00,user_1,hospital
+40.7140,-74.0048,2024-01-15T08:32:00,user_2,shopping
+40.7145,-74.0042,2024-01-15T08:33:00,user_3,home`}
         </pre>
+        <p className="text-[10px] text-muted-foreground mt-3">
+          <strong>location_type</strong> values: office, hospital, home, school, shopping, restaurant, gym, park, bank, government.
+          Sensitive locations (hospital, home) receive more privacy noise.
+        </p>
       </div>
     </div>
   );
