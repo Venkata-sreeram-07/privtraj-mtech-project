@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import AppSidebar from '@/components/Sidebar';
+import AppNavbar from '@/components/AppNavbar';
 import DashboardView from '@/components/DashboardView';
 import UploadView from '@/components/UploadView';
 import PrivacyConfigView from '@/components/PrivacyConfigView';
@@ -40,13 +41,16 @@ export default function Index() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <AppSidebar activeTab={activeTab} onTabChange={setActiveTab} />
-      <main className="flex-1 overflow-y-auto p-4 lg:p-6 grid-bg">
-        <div className="max-w-5xl mx-auto">
-          {renderView()}
-        </div>
-      </main>
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
+      <AppNavbar />
+      <div className="flex flex-1 overflow-hidden">
+        <AppSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 grid-bg">
+          <div className="max-w-5xl mx-auto">
+            {renderView()}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

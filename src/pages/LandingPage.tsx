@@ -1,14 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Shield, Upload, Map, BarChart3, Lock, Database, Cpu, Eye, EyeOff,
   ArrowRight, ChevronRight, Globe, Zap, TrendingUp, Users, FileText,
-  Layers, GitBranch, Server, Code2, BookOpen, GraduationCap
+  Layers, GitBranch, Server, Code2, BookOpen, GraduationCap, CheckCircle, XCircle, Minus, MapPin
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import {
   Carousel,
   CarouselContent,
@@ -20,7 +21,6 @@ import {
 import heroImg from '@/assets/hero-trajectory.jpg';
 import dpImg from '@/assets/differential-privacy.jpg';
 import ldImg from '@/assets/l-diversity.jpg';
-import archImg from '@/assets/architecture.jpg';
 import smartcityImg from '@/assets/usecase-smartcity.jpg';
 import healthcareImg from '@/assets/usecase-healthcare.jpg';
 import transportImg from '@/assets/usecase-transport.jpg';
@@ -36,6 +36,108 @@ const fadeUp = {
 
 const stagger = {
   visible: { transition: { staggerChildren: 0.1 } },
+};
+
+// Particle system
+function ParticleField() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number }[] = [];
+    const PARTICLE_COUNT = 80;
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: Math.random() * canvas.offsetWidth,
+        y: Math.random() * canvas.offsetHeight,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        size: Math.random() * 2 + 0.5,
+        opacity: Math.random() * 0.5 + 0.1,
+      });
+    }
+
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+
+      for (const p of particles) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.offsetWidth;
+        if (p.x > canvas.offsetWidth) p.x = 0;
+        if (p.y < 0) p.y = canvas.offsetHeight;
+        if (p.y > canvas.offsetHeight) p.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(185, 72%, 48%, ${p.opacity})`;
+        ctx.fill();
+      }
+
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `hsla(185, 72%, 48%, ${0.08 * (1 - dist / 120)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+
+      animId = requestAnimationFrame(draw);
+    };
+    draw();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', resize);
+    };
+  }, []);
+
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />;
+}
+
+// Comparison data
+const comparisonFeatures = [
+  { feature: 'l-Diversity Support', privtraj: true, arx: true, opendp: false, google: false },
+  { feature: 'Differential Privacy', privtraj: true, arx: true, opendp: true, google: true },
+  { feature: 'Trajectory / GPS Focus', privtraj: true, arx: false, opendp: false, google: false },
+  { feature: 'Interactive Map Visualization', privtraj: true, arx: false, opendp: false, google: false },
+  { feature: 'Location Sensitivity Scoring', privtraj: true, arx: false, opendp: false, google: false },
+  { feature: 'Web-Based UI', privtraj: true, arx: true, opendp: false, google: false },
+  { feature: 'Real-Time Processing', privtraj: true, arx: false, opendp: true, google: true },
+  { feature: 'Before/After Comparison', privtraj: true, arx: 'partial', opendp: false, google: false },
+  { feature: 'Privacy Risk Dashboard', privtraj: true, arx: false, opendp: false, google: false },
+  { feature: 'CSV Upload & Parse', privtraj: true, arx: true, opendp: false, google: false },
+  { feature: 'Open Source', privtraj: true, arx: true, opendp: true, google: true },
+  { feature: 'No Setup Required', privtraj: true, arx: false, opendp: false, google: false },
+];
+
+const FeatureIcon = ({ val }: { val: boolean | string }) => {
+  if (val === true) return <CheckCircle className="w-4 h-4 text-accent mx-auto" />;
+  if (val === 'partial') return <Minus className="w-4 h-4 text-warning mx-auto" />;
+  return <XCircle className="w-4 h-4 text-muted-foreground/40 mx-auto" />;
 };
 
 export default function LandingPage() {
@@ -58,7 +160,7 @@ export default function LandingPage() {
             <span className="font-bold text-lg gradient-text">PrivTraj</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {['Features', 'Algorithms', 'Architecture', 'Use Cases', 'About'].map((item) => (
+            {['Features', 'Algorithms', 'Architecture', 'Comparison', 'Use Cases', 'About'].map((item) => (
               <button
                 key={item}
                 onClick={() => scrollTo(item.toLowerCase().replace(' ', '-'))}
@@ -74,12 +176,13 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ── Hero ── */}
+      {/* ── Hero with Particles ── */}
       <section className="relative pt-16 min-h-screen flex items-center">
         <div className="absolute inset-0">
-          <img src={heroImg} alt="Trajectory data visualization" className="w-full h-full object-cover opacity-30" width={1920} height={1080} />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+          <img src={heroImg} alt="Trajectory data visualization" className="w-full h-full object-cover opacity-20" width={1920} height={1080} />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
         </div>
+        <ParticleField />
         <div className="relative max-w-7xl mx-auto px-6 py-24 grid lg:grid-cols-2 gap-12 items-center">
           <motion.div initial="hidden" animate="visible" variants={stagger}>
             <motion.div variants={fadeUp} custom={0}>
@@ -96,7 +199,7 @@ export default function LandingPage() {
               A full-stack platform for anonymizing GPS trajectory datasets using{' '}
               <span className="text-primary font-semibold">l-Diversity</span> and{' '}
               <span className="text-accent font-semibold">Differential Privacy</span>{' '}
-              algorithms — balancing data utility with user privacy in the age of ubiquitous location tracking.
+              algorithms — with location-type sensitivity scoring for hospitals, homes, and more.
             </motion.p>
             <motion.div variants={fadeUp} custom={3} className="flex flex-wrap gap-4">
               <Button onClick={() => navigate('/app')} size="lg" className="gap-2 text-base">
@@ -133,14 +236,12 @@ export default function LandingPage() {
               </div>
               <div className="h-64 rounded-lg bg-muted/30 border border-border overflow-hidden relative">
                 <svg viewBox="0 0 400 250" className="w-full h-full">
-                  {/* Grid */}
                   {Array.from({ length: 10 }).map((_, i) => (
                     <line key={`g${i}`} x1={i * 40} y1={0} x2={i * 40} y2={250} stroke="hsl(220,16%,18%)" strokeWidth={0.5} />
                   ))}
                   {Array.from({ length: 7 }).map((_, i) => (
                     <line key={`h${i}`} x1={0} y1={i * 40} x2={400} y2={i * 40} stroke="hsl(220,16%,18%)" strokeWidth={0.5} />
                   ))}
-                  {/* Original path */}
                   <motion.path
                     d="M 30 200 Q 80 180 120 150 T 200 120 T 280 80 T 370 50"
                     fill="none"
@@ -151,7 +252,6 @@ export default function LandingPage() {
                     transition={{ duration: 2, ease: 'easeInOut' }}
                     key={showOriginal ? 'orig' : 'anon'}
                   />
-                  {/* Data points */}
                   {(showOriginal
                     ? [[30,200],[80,170],[120,150],[160,135],[200,120],[240,100],[280,80],[330,60],[370,50]]
                     : [[35,195],[85,175],[115,145],[165,140],[195,115],[245,105],[275,75],[325,65],[375,45]]
@@ -167,11 +267,20 @@ export default function LandingPage() {
                       transition={{ delay: i * 0.1 + 0.5 }}
                     />
                   ))}
+                  {/* Location type labels */}
+                  {showOriginal && (
+                    <>
+                      <text x={30} y={218} fill="hsl(0,72%,55%)" fontSize={8} fontFamily="monospace">🏥</text>
+                      <text x={120} y={168} fill="hsl(38,92%,55%)" fontSize={8} fontFamily="monospace">🏠</text>
+                      <text x={200} y={138} fill="hsl(165,60%,45%)" fontSize={8} fontFamily="monospace">🏢</text>
+                      <text x={280} y={98} fill="hsl(165,60%,45%)" fontSize={8} fontFamily="monospace">🛒</text>
+                    </>
+                  )}
                 </svg>
               </div>
               <div className="grid grid-cols-3 gap-3 text-center">
                 {[
-                  { label: 'Points', value: '500+' },
+                  { label: 'Points', value: '750+' },
                   { label: 'Privacy', value: '94%' },
                   { label: 'Utility', value: '87%' },
                 ].map((stat) => (
@@ -234,15 +343,15 @@ export default function LandingPage() {
 
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Upload, title: 'CSV Data Upload', desc: 'Upload GPS trajectory datasets in standard CSV format with automatic column detection and validation.' },
+              { icon: Upload, title: 'CSV Data Upload', desc: 'Upload GPS trajectory datasets with latitude, longitude, timestamp, user_id, and location_type columns.' },
               { icon: Shield, title: 'l-Diversity Anonymization', desc: 'Spatial cell generalization ensuring each grid cell contains at least l distinct user identities.' },
               { icon: Lock, title: 'Differential Privacy', desc: 'Laplace and Gaussian noise injection with configurable epsilon (ε) and sensitivity parameters.' },
+              { icon: MapPin, title: 'Location Sensitivity', desc: 'Automatic risk scoring — hospitals and homes get more noise than offices and parks.' },
               { icon: Map, title: 'Interactive Map View', desc: 'Leaflet-powered map comparing original vs. anonymized trajectories with dark-themed tiles.' },
-              { icon: BarChart3, title: 'Privacy Metrics Dashboard', desc: 'Real-time charts showing privacy level, data utility, processing time, and displacement metrics.' },
-              { icon: Zap, title: 'Real-Time Processing', desc: 'Instant anonymization with configurable algorithms and immediate visual feedback on results.' },
+              { icon: BarChart3, title: 'Privacy Metrics Dashboard', desc: 'Real-time charts showing privacy level, data utility, re-identification risk, and displacement.' },
               { icon: FileText, title: 'Export Results', desc: 'Download anonymized datasets and privacy reports for further analysis and documentation.' },
               { icon: TrendingUp, title: 'Utility Analysis', desc: 'Quantitative measurement of data utility preservation after applying privacy algorithms.' },
-              { icon: Eye, title: 'Before/After Comparison', desc: 'Side-by-side visualization of original and anonymized trajectory data on interactive maps.' },
+              { icon: Eye, title: 'Before/After Comparison', desc: 'Side-by-side visualization and detailed comparison tables of original vs anonymized data.' },
             ].map((feature, i) => (
               <motion.div key={feature.title} variants={fadeUp} custom={i}>
                 <Card className="glass-card border-border hover:glow-border transition-all duration-300 h-full group">
@@ -284,7 +393,7 @@ export default function LandingPage() {
               <p className="text-muted-foreground mb-6 leading-relaxed">
                 l-Diversity extends k-anonymity by ensuring that each equivalence class (spatial grid cell)
                 contains at least <strong className="text-foreground">l distinct values</strong> for sensitive attributes.
-                This prevents attribute disclosure attacks where an adversary can infer sensitive information.
+                This prevents attribute disclosure attacks.
               </p>
               <div className="space-y-4">
                 {[
@@ -374,7 +483,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Architecture ── */}
+      {/* ── Architecture (Redesigned) ── */}
       <section id="architecture" className="py-24 border-t border-border grid-bg">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center max-w-3xl mx-auto mb-16">
@@ -382,44 +491,87 @@ export default function LandingPage() {
             <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-5xl font-black mb-6">
               <span className="gradient-text">Architecture</span> Overview
             </motion.h2>
+            <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-lg">
+              A modular, layered architecture designed for scalability and maintainability
+            </motion.p>
           </motion.div>
 
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            <div className="glass-card rounded-2xl overflow-hidden mb-12">
-              <img src={archImg} alt="System architecture diagram" loading="lazy" width={1200} height={700} className="w-full" />
+          {/* Visual Architecture Diagram */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mb-12">
+            <div className="glass-card rounded-2xl p-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 relative">
+                {/* Layer 1: Presentation */}
+                <div className="space-y-3">
+                  <div className="text-center mb-4">
+                    <Badge className="bg-primary/10 text-primary border-primary/30 font-mono text-xs">Layer 1</Badge>
+                    <h4 className="text-sm font-bold mt-2">Presentation</h4>
+                  </div>
+                  {[
+                    { icon: Code2, label: 'React + TypeScript', sub: 'Component UI' },
+                    { icon: Map, label: 'Leaflet Maps', sub: 'Trajectory Viz' },
+                    { icon: BarChart3, label: 'Recharts', sub: 'Metrics & Charts' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-muted/30 rounded-lg p-3 border border-primary/20 text-center">
+                      <item.icon className="w-5 h-5 text-primary mx-auto mb-1" />
+                      <p className="text-xs font-semibold">{item.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.sub}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Arrow */}
+                <div className="hidden md:flex items-center justify-center">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-px h-12 bg-gradient-to-b from-primary/50 to-accent/50" />
+                    <ChevronRight className="w-6 h-6 text-primary rotate-0" />
+                    <span className="text-[9px] text-muted-foreground font-mono">REST API</span>
+                    <div className="w-px h-12 bg-gradient-to-b from-accent/50 to-primary/50" />
+                  </div>
+                </div>
+
+                {/* Layer 2: Processing */}
+                <div className="space-y-3">
+                  <div className="text-center mb-4">
+                    <Badge className="bg-accent/10 text-accent border-accent/30 font-mono text-xs">Layer 2</Badge>
+                    <h4 className="text-sm font-bold mt-2">Processing Engine</h4>
+                  </div>
+                  {[
+                    { icon: Shield, label: 'l-Diversity', sub: 'Spatial Anonymization' },
+                    { icon: Lock, label: 'ε-DP Engine', sub: 'Laplace / Gaussian' },
+                    { icon: MapPin, label: 'Sensitivity Scorer', sub: 'Location Risk Analysis' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-muted/30 rounded-lg p-3 border border-accent/20 text-center">
+                      <item.icon className="w-5 h-5 text-accent mx-auto mb-1" />
+                      <p className="text-xs font-semibold">{item.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.sub}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Arrow + Layer 3 */}
+                <div className="space-y-3">
+                  <div className="text-center mb-4">
+                    <Badge className="bg-warning/10 text-warning border-warning/30 font-mono text-xs">Layer 3</Badge>
+                    <h4 className="text-sm font-bold mt-2">Data Layer</h4>
+                  </div>
+                  {[
+                    { icon: Database, label: 'PostgreSQL', sub: 'Persistent Storage' },
+                    { icon: FileText, label: 'CSV Parser', sub: 'Data Ingestion' },
+                    { icon: Cpu, label: 'Metrics Engine', sub: 'Analysis & Reports' },
+                  ].map(item => (
+                    <div key={item.label} className="bg-muted/30 rounded-lg p-3 border border-warning/20 text-center">
+                      <item.icon className="w-5 h-5 text-warning mx-auto mb-1" />
+                      <p className="text-xs font-semibold">{item.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.sub}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
 
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: Code2, title: 'React Frontend', desc: 'TypeScript + Vite + Tailwind CSS with Leaflet maps and Recharts visualization', tech: ['React 18', 'TypeScript', 'Tailwind CSS'] },
-              { icon: Server, title: 'API Layer', desc: 'RESTful API endpoints for data upload, processing, and result retrieval', tech: ['REST API', 'Edge Functions', 'JSON'] },
-              { icon: Cpu, title: 'Processing Engine', desc: 'l-Diversity and Differential Privacy algorithms with configurable parameters', tech: ['l-Diversity', 'ε-DP', 'Laplace/Gaussian'] },
-              { icon: Database, title: 'Data Storage', desc: 'PostgreSQL for persistent storage of datasets, results, and processing history', tech: ['PostgreSQL', 'Cloud Storage', 'CSV'] },
-            ].map((layer, i) => (
-              <motion.div key={layer.title} variants={fadeUp} custom={i}>
-                <Card className="glass-card border-border h-full">
-                  <CardHeader>
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
-                      <layer.icon className="w-5 h-5 text-primary" />
-                    </div>
-                    <CardTitle className="text-sm">{layer.title}</CardTitle>
-                    <CardDescription className="text-xs">{layer.desc}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-1.5">
-                      {layer.tech.map((t) => (
-                        <Badge key={t} variant="secondary" className="text-[10px] font-mono">{t}</Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Data Flow */}
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="mt-12">
+          {/* Data Flow Pipeline */}
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
             <Card className="glass-card border-border">
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
@@ -430,15 +582,16 @@ export default function LandingPage() {
               <CardContent>
                 <div className="flex flex-wrap items-center justify-center gap-3 text-sm">
                   {[
-                    { label: 'CSV Upload', icon: Upload },
-                    { label: 'Parsing & Validation', icon: FileText },
-                    { label: 'l-Diversity', icon: Layers },
-                    { label: 'Differential Privacy', icon: Lock },
-                    { label: 'Metrics Calculation', icon: BarChart3 },
-                    { label: 'Visualization', icon: Map },
+                    { label: 'CSV Upload', icon: Upload, color: 'border-primary/30' },
+                    { label: 'Parse & Validate', icon: FileText, color: 'border-primary/30' },
+                    { label: 'Sensitivity Score', icon: MapPin, color: 'border-warning/30' },
+                    { label: 'l-Diversity', icon: Layers, color: 'border-accent/30' },
+                    { label: 'ε-DP Noise', icon: Lock, color: 'border-accent/30' },
+                    { label: 'Risk Analysis', icon: Shield, color: 'border-destructive/30' },
+                    { label: 'Visualization', icon: Map, color: 'border-primary/30' },
                   ].map((step, i, arr) => (
                     <div key={step.label} className="flex items-center gap-3">
-                      <div className="flex items-center gap-2 bg-muted/30 rounded-lg px-4 py-2.5 border border-border">
+                      <div className={`flex items-center gap-2 bg-muted/30 rounded-lg px-4 py-2.5 border ${step.color}`}>
                         <step.icon className="w-4 h-4 text-primary" />
                         <span className="text-xs font-medium">{step.label}</span>
                       </div>
@@ -452,8 +605,62 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Comparison Table ── */}
+      <section id="comparison" className="py-24 border-t border-border">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center max-w-3xl mx-auto mb-16">
+            <motion.p variants={fadeUp} custom={0} className="text-primary font-mono text-sm mb-4 uppercase tracking-widest">Tool Comparison</motion.p>
+            <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-5xl font-black mb-6">
+              <span className="gradient-text">PrivTraj</span> vs Other Tools
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-lg">
+              See how PrivTraj compares to ARX, OpenDP, and Google's Differential Privacy library
+            </motion.p>
+          </motion.div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+            <div className="glass-card rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border">
+                      <TableHead className="text-xs font-semibold min-w-[200px]">Feature</TableHead>
+                      <TableHead className="text-xs text-center font-bold text-primary min-w-[100px]">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Shield className="w-3.5 h-3.5" />
+                          PrivTraj
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-xs text-center min-w-[100px]">ARX</TableHead>
+                      <TableHead className="text-xs text-center min-w-[100px]">OpenDP</TableHead>
+                      <TableHead className="text-xs text-center min-w-[100px]">Google DP</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {comparisonFeatures.map((row) => (
+                      <TableRow key={row.feature} className="border-border/50">
+                        <TableCell className="text-xs font-medium">{row.feature}</TableCell>
+                        <TableCell className="text-center bg-primary/5"><FeatureIcon val={row.privtraj} /></TableCell>
+                        <TableCell className="text-center"><FeatureIcon val={row.arx} /></TableCell>
+                        <TableCell className="text-center"><FeatureIcon val={row.opendp} /></TableCell>
+                        <TableCell className="text-center"><FeatureIcon val={row.google} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="p-4 border-t border-border bg-muted/20">
+                <p className="text-[10px] text-muted-foreground text-center">
+                  Comparison based on publicly available documentation. PrivTraj is specifically designed for trajectory/GPS data privacy with location-type sensitivity.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ── Use Cases Carousel ── */}
-      <section id="use-cases" className="py-24 border-t border-border">
+      <section id="use-cases" className="py-24 border-t border-border grid-bg">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center max-w-3xl mx-auto mb-16">
             <motion.p variants={fadeUp} custom={0} className="text-primary font-mono text-sm mb-4 uppercase tracking-widest">Real-World Applications</motion.p>
@@ -469,19 +676,19 @@ export default function LandingPage() {
                   {
                     img: smartcityImg,
                     title: 'Smart City Planning',
-                    desc: 'Urban planners can analyze traffic patterns and pedestrian flows without compromising individual privacy. Trajectory data helps optimize public transport routes and infrastructure placement.',
+                    desc: 'Urban planners can analyze traffic patterns and pedestrian flows without compromising individual privacy.',
                     stats: ['Traffic Optimization', 'Urban Mobility', 'Public Transit'],
                   },
                   {
                     img: healthcareImg,
                     title: 'Healthcare & Epidemiology',
-                    desc: 'Track disease spread patterns and patient movement within healthcare facilities while maintaining strict HIPAA compliance through mathematical privacy guarantees.',
+                    desc: 'Track disease spread patterns and patient movement while maintaining HIPAA compliance through mathematical privacy guarantees.',
                     stats: ['Contact Tracing', 'HIPAA Compliance', 'Epidemic Analysis'],
                   },
                   {
                     img: transportImg,
                     title: 'Transportation & Logistics',
-                    desc: 'Ride-sharing and delivery companies can share anonymized route data for research and optimization without exposing individual driver or customer trajectories.',
+                    desc: 'Ride-sharing and delivery companies can share anonymized route data for research without exposing individual trajectories.',
                     stats: ['Route Planning', 'Fleet Analytics', 'Demand Prediction'],
                   },
                 ].map((useCase) => (
@@ -510,8 +717,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Why Now Section ── */}
-      <section className="py-24 border-t border-border grid-bg">
+      {/* ── Why Now ── */}
+      <section className="py-24 border-t border-border">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div variants={fadeUp} custom={0}>
@@ -522,21 +729,14 @@ export default function LandingPage() {
               <div className="space-y-6 text-muted-foreground">
                 <p className="leading-relaxed">
                   With the explosion of IoT devices, connected vehicles, and smartphone applications,
-                  location data has become one of the most sensitive and valuable types of personal information.
+                  location data has become one of the most sensitive types of personal information.
                   Regulations like <strong className="text-foreground">GDPR</strong>, <strong className="text-foreground">CCPA</strong>,
-                  and <strong className="text-foreground">India's DPDP Act 2023</strong> now mandate
-                  strict privacy protections for such data.
+                  and <strong className="text-foreground">India's DPDP Act 2023</strong> now mandate strict protections.
                 </p>
                 <p className="leading-relaxed">
-                  Traditional anonymization methods like simple pseudonymization are no longer sufficient —
-                  research has shown that <strong className="text-foreground">87% of Americans</strong> can
-                  be uniquely identified using just three data points: ZIP code, birth date, and gender.
-                  Trajectory data makes re-identification even easier.
-                </p>
-                <p className="leading-relaxed">
-                  PrivTraj bridges the gap between <strong className="text-foreground">data utility</strong> and
-                  <strong className="text-foreground"> privacy protection</strong>, enabling organizations to leverage
-                  location analytics while maintaining mathematical privacy guarantees.
+                  Traditional anonymization methods are no longer sufficient —
+                  research shows <strong className="text-foreground">87% of Americans</strong> can be uniquely identified
+                  using just three data points. Trajectory data makes re-identification even easier.
                 </p>
               </div>
             </motion.div>
@@ -569,7 +769,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── Tech Stack ── */}
-      <section className="py-24 border-t border-border">
+      <section className="py-24 border-t border-border grid-bg">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center max-w-3xl mx-auto mb-16">
             <motion.p variants={fadeUp} custom={0} className="text-primary font-mono text-sm mb-4 uppercase tracking-widest">Technology Stack</motion.p>
@@ -604,8 +804,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── About / Author ── */}
-      <section id="about" className="py-24 border-t border-border grid-bg">
+      {/* ── About ── */}
+      <section id="about" className="py-24 border-t border-border">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.div variants={fadeUp} custom={0}>
@@ -635,7 +835,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-24 border-t border-border">
+      <section className="py-24 border-t border-border grid-bg">
         <div className="max-w-4xl mx-auto px-6 text-center">
           <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}>
             <motion.h2 variants={fadeUp} custom={0} className="text-3xl md:text-5xl font-black mb-6">
