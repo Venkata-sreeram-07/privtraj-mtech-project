@@ -37,6 +37,8 @@ export interface PrivacyConfig {
   epsilonValue: number;
   noiseType: 'laplace' | 'gaussian';
   sensitivityValue: number;
+  gridResolution: number;
+  temporalRounding: number;
 }
 
 export interface PrivacyMetrics {
@@ -46,7 +48,6 @@ export interface PrivacyMetrics {
   pointsOriginal: number;
   pointsAnonymized: number;
   averageDisplacement: number;
-  // Extended metrics
   suppressionRate: number;
   informationLoss: number;
   reidentificationRisk: number;
@@ -57,6 +58,9 @@ export interface PrivacyMetrics {
   epsilonUsed: number;
   lValueUsed: number;
   noiseTypeUsed: 'laplace' | 'gaussian';
+  kAnonymityEstimate: number;
+  entropyLoss: number;
+  clusterPreservation: number;
 }
 
 const LOCATION_TYPES: LocationType[] = ['office', 'hospital', 'home', 'school', 'shopping', 'restaurant', 'gym', 'park', 'bank', 'government'];
@@ -75,7 +79,6 @@ export function generateSampleTrajectory(numPoints: number = 750): TrajectoryPoi
     lat += (Math.random() - 0.5) * 0.002;
     lng += (Math.random() - 0.5) * 0.002;
     
-    // Weight toward more common types
     const typeWeights: [LocationType, number][] = [
       ['office', 20], ['home', 18], ['shopping', 12], ['restaurant', 12],
       ['park', 10], ['hospital', 8], ['school', 7], ['gym', 5], ['bank', 4], ['government', 4],
@@ -102,20 +105,17 @@ export function generateSampleTrajectory(numPoints: number = 750): TrajectoryPoi
   return points;
 }
 
-// Apply Laplace noise for differential privacy
 function laplace(scale: number): number {
   const u = Math.random() - 0.5;
   return -scale * Math.sign(u) * Math.log(1 - 2 * Math.abs(u));
 }
 
-// Apply Gaussian noise
 function gaussian(sigma: number): number {
   const u1 = Math.random();
   const u2 = Math.random();
   return sigma * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
-// Apply differential privacy noise to trajectory
 export function applyDifferentialPrivacy(
   points: TrajectoryPoint[],
   epsilon: number,
@@ -126,7 +126,6 @@ export function applyDifferentialPrivacy(
   
   return points.map(p => {
     const noiseFn = noiseType === 'laplace' ? laplace : gaussian;
-    // More noise for sensitive locations
     const sensitivityMultiplier = p.locationType ? (LOCATION_SENSITIVITY[p.locationType] / 100) * 1.5 + 0.5 : 1;
     return {
       ...p,
@@ -137,7 +136,6 @@ export function applyDifferentialPrivacy(
   });
 }
 
-// Simple l-diversity: ensure each spatial cell has at least l different users
 export function applyLDiversity(
   points: TrajectoryPoint[],
   lValue: number,
@@ -172,7 +170,15 @@ export function applyLDiversity(
   return result;
 }
 
-// Calculate displacement between original and anonymized points
+// Temporal rounding
+export function applyTemporalRounding(points: TrajectoryPoint[], roundMinutes: number): TrajectoryPoint[] {
+  const ms = roundMinutes * 60 * 1000;
+  return points.map(p => ({
+    ...p,
+    timestamp: Math.round(p.timestamp / ms) * ms,
+  }));
+}
+
 export function calculateDisplacement(original: TrajectoryPoint[], anonymized: TrajectoryPoint[]): number {
   const count = Math.min(original.length, anonymized.length);
   if (count === 0) return 0;
@@ -187,7 +193,6 @@ export function calculateDisplacement(original: TrajectoryPoint[], anonymized: T
   return totalDist / count;
 }
 
-// Compute extended metrics including location-type privacy risk
 export function computeExtendedMetrics(
   original: TrajectoryPoint[],
   anonymized: TrajectoryPoint[],
@@ -204,7 +209,6 @@ export function computeExtendedMetrics(
     100 - displacement * 2 - (1 - anonymized.length / original.length) * 40
   ));
 
-  // Location type distribution
   const locationTypeDistribution = {} as PrivacyMetrics['locationTypeDistribution'];
   for (const type of LOCATION_TYPES) {
     const origCount = original.filter(p => p.locationType === type).length;
@@ -216,7 +220,6 @@ export function computeExtendedMetrics(
     };
   }
 
-  // Privacy risk by type
   const privacyRiskByType = LOCATION_TYPES
     .map(type => {
       const origCount = original.filter(p => p.locationType === type).length;
@@ -232,6 +235,12 @@ export function computeExtendedMetrics(
   const reidentificationRisk = Math.max(0, Math.min(100, Math.round(100 - privacyLevel * 0.9 - suppressionRate * 0.1)));
   const spatialDistortion = Math.round(displacement * 100) / 100;
   const temporalConsistency = Math.round(Math.max(0, 100 - displacement * 5));
+
+  // New metrics
+  const uniqueAnonUsers = new Set(anonymized.map(p => p.userId)).size;
+  const kAnonymityEstimate = uniqueAnonUsers > 0 ? Math.round(anonymized.length / uniqueAnonUsers) : 0;
+  const entropyLoss = Math.round(Math.max(0, Math.min(100, suppressionRate * 0.6 + displacement * 3)));
+  const clusterPreservation = Math.round(Math.max(0, 100 - suppressionRate * 0.5 - displacement * 2));
 
   return {
     privacyLevel,
@@ -250,10 +259,12 @@ export function computeExtendedMetrics(
     epsilonUsed: config.epsilonValue,
     lValueUsed: config.lDiversityValue,
     noiseTypeUsed: config.noiseType,
+    kAnonymityEstimate,
+    entropyLoss,
+    clusterPreservation,
   };
 }
 
-// Parse CSV trajectory data
 export function parseCSV(text: string): TrajectoryPoint[] {
   const lines = text.trim().split('\n');
   if (lines.length < 2) return [];

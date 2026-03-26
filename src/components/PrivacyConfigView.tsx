@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Shield, Zap, Lock, Play } from 'lucide-react';
+import { Shield, Zap, Lock, Play, Grid3X3, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { motion } from 'framer-motion';
-import { PrivacyConfig, TrajectoryPoint, applyDifferentialPrivacy, applyLDiversity, computeExtendedMetrics, PrivacyMetrics } from '@/lib/trajectoryUtils';
+import { PrivacyConfig, TrajectoryPoint, applyDifferentialPrivacy, applyLDiversity, applyTemporalRounding, computeExtendedMetrics, PrivacyMetrics } from '@/lib/trajectoryUtils';
 
 interface PrivacyConfigViewProps {
   originalData: TrajectoryPoint[];
@@ -16,6 +16,8 @@ export default function PrivacyConfigView({ originalData, onProcessed }: Privacy
     epsilonValue: 1.0,
     noiseType: 'laplace',
     sensitivityValue: 1.0,
+    gridResolution: 0.005,
+    temporalRounding: 5,
   });
   const [processing, setProcessing] = useState(false);
 
@@ -25,8 +27,9 @@ export default function PrivacyConfigView({ originalData, onProcessed }: Privacy
 
     setTimeout(() => {
       const startTime = performance.now();
-      let result = applyLDiversity(originalData, config.lDiversityValue);
+      let result = applyLDiversity(originalData, config.lDiversityValue, config.gridResolution);
       result = applyDifferentialPrivacy(result, config.epsilonValue, config.sensitivityValue, config.noiseType);
+      result = applyTemporalRounding(result, config.temporalRounding);
       const processingTime = Math.round(performance.now() - startTime);
 
       const metrics = computeExtendedMetrics(originalData, result, config, processingTime);
@@ -41,7 +44,7 @@ export default function PrivacyConfigView({ originalData, onProcessed }: Privacy
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Privacy Configuration</h1>
-        <p className="text-sm text-muted-foreground mt-1">Configure anonymization algorithms</p>
+        <p className="text-sm text-muted-foreground mt-1">Configure anonymization algorithms and parameters</p>
       </div>
 
       {!hasData && (
@@ -71,6 +74,14 @@ export default function PrivacyConfigView({ originalData, onProcessed }: Privacy
             </div>
             <Slider value={[config.lDiversityValue]} onValueChange={([v]) => setConfig(c => ({ ...c, lDiversityValue: v }))} min={2} max={10} step={1} disabled={!hasData} />
             <p className="text-[10px] text-muted-foreground mt-2">Minimum distinct users per spatial cell. Higher = more private, less utility.</p>
+          </div>
+          <div>
+            <div className="flex justify-between text-xs mb-2">
+              <span className="text-muted-foreground">Grid Resolution</span>
+              <span className="font-mono font-semibold text-primary">{config.gridResolution.toFixed(3)}°</span>
+            </div>
+            <Slider value={[config.gridResolution]} onValueChange={([v]) => setConfig(c => ({ ...c, gridResolution: v }))} min={0.001} max={0.02} step={0.001} disabled={!hasData} />
+            <p className="text-[10px] text-muted-foreground mt-2">Size of spatial grid cells in degrees. Smaller = finer resolution.</p>
           </div>
         </motion.div>
 
@@ -116,6 +127,26 @@ export default function PrivacyConfigView({ originalData, onProcessed }: Privacy
           </div>
         </motion.div>
       </div>
+
+      {/* Temporal rounding */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-lg p-5 space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-warning/10 border border-warning/20 flex items-center justify-center">
+            <Clock className="w-4 h-4 text-warning" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold">Temporal Rounding</h3>
+            <p className="text-xs text-muted-foreground">Round timestamps to reduce precision</p>
+          </div>
+        </div>
+        <div>
+          <div className="flex justify-between text-xs mb-2">
+            <span className="text-muted-foreground">Round to nearest</span>
+            <span className="font-mono font-semibold text-warning">{config.temporalRounding} min</span>
+          </div>
+          <Slider value={[config.temporalRounding]} onValueChange={([v]) => setConfig(c => ({ ...c, temporalRounding: v }))} min={1} max={60} step={1} disabled={!hasData} />
+        </div>
+      </motion.div>
 
       <Button onClick={handleProcess} disabled={!hasData || processing} className="w-full py-6 text-sm font-semibold glow-border">
         {processing ? (
