@@ -1,9 +1,11 @@
 import { PrivacyMetrics, TrajectoryPoint, LOCATION_SENSITIVITY, LocationType } from '@/lib/trajectoryUtils';
 import { motion } from 'framer-motion';
-import { Shield, TrendingUp, Ruler, Hash, ArrowDown, ArrowRight, AlertTriangle, CheckCircle, XCircle, Activity, MapPin } from 'lucide-react';
-import { RadialBarChart, RadialBar, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts';
+import { Shield, TrendingUp, Ruler, Hash, ArrowDown, ArrowRight, AlertTriangle, CheckCircle, XCircle, Activity, MapPin, Download, FileDown, Clock, Fingerprint, BarChart3, Layers } from 'lucide-react';
+import { RadialBarChart, RadialBar, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from 'recharts';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ResultsViewProps {
   metrics: PrivacyMetrics | null;
@@ -22,6 +24,59 @@ const riskBadge = (risk: number) => {
   if (risk >= 40) return <Badge className="text-[10px] bg-warning/20 text-warning border-warning/30">Medium</Badge>;
   return <Badge className="text-[10px] bg-accent/20 text-accent border-accent/30">Low Risk</Badge>;
 };
+
+function exportCSV(data: TrajectoryPoint[], filename: string) {
+  const header = 'latitude,longitude,timestamp,user_id,location_type,speed,heading';
+  const rows = data.map(p =>
+    `${p.lat},${p.lng},${new Date(p.timestamp).toISOString()},${p.userId},${p.locationType || ''},${p.speed?.toFixed(2) || ''},${p.heading?.toFixed(2) || ''}`
+  );
+  const blob = new Blob([header + '\n' + rows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportReport(metrics: PrivacyMetrics) {
+  const report = {
+    generatedAt: new Date().toISOString(),
+    platform: 'PrivTraj v1.0',
+    summary: {
+      privacyLevel: metrics.privacyLevel,
+      dataUtility: metrics.dataUtility,
+      reidentificationRisk: metrics.reidentificationRisk,
+      pointsOriginal: metrics.pointsOriginal,
+      pointsAnonymized: metrics.pointsAnonymized,
+    },
+    configuration: {
+      epsilon: metrics.epsilonUsed,
+      lValue: metrics.lValueUsed,
+      noiseType: metrics.noiseTypeUsed,
+    },
+    detailedMetrics: {
+      suppressionRate: metrics.suppressionRate,
+      informationLoss: metrics.informationLoss,
+      spatialDistortion: metrics.spatialDistortion,
+      temporalConsistency: metrics.temporalConsistency,
+      averageDisplacement: metrics.averageDisplacement,
+      processingTime: metrics.processingTime,
+      kAnonymityEstimate: metrics.kAnonymityEstimate,
+      entropyLoss: metrics.entropyLoss,
+      clusterPreservation: metrics.clusterPreservation,
+    },
+    privacyRiskByLocationType: metrics.privacyRiskByType,
+    locationTypeDistribution: metrics.locationTypeDistribution,
+  };
+  const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'privtraj_privacy_report.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 export default function ResultsView({ metrics, originalData, anonymizedData }: ResultsViewProps) {
   if (!metrics) {
@@ -46,15 +101,37 @@ export default function ResultsView({ metrics, originalData, anonymizedData }: R
     .sort((a, b) => b.risk - a.risk)
     .map(r => ({ name: r.type, risk: r.risk, count: r.count }));
 
+  const radarData = [
+    { metric: 'Privacy', value: metrics.privacyLevel },
+    { metric: 'Utility', value: metrics.dataUtility },
+    { metric: 'Temporal', value: metrics.temporalConsistency },
+    { metric: 'Cluster', value: metrics.clusterPreservation },
+    { metric: 'Low Re-ID', value: 100 - metrics.reidentificationRisk },
+    { metric: 'Low Loss', value: 100 - metrics.informationLoss },
+  ];
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Anonymization Results</h1>
-        <p className="text-sm text-muted-foreground mt-1">Comprehensive analysis of privacy operations</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Anonymization Results</h1>
+          <p className="text-sm text-muted-foreground mt-1">Comprehensive analysis of privacy operations</p>
+        </div>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={() => exportCSV(anonymizedData, 'anonymized_trajectories.csv')}>
+            <FileDown className="w-3.5 h-3.5" /> Export CSV
+          </Button>
+          <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={() => exportCSV(originalData, 'original_trajectories.csv')}>
+            <Download className="w-3.5 h-3.5" /> Original CSV
+          </Button>
+          <Button size="sm" className="gap-2 text-xs" onClick={() => exportReport(metrics)}>
+            <BarChart3 className="w-3.5 h-3.5" /> Export Report
+          </Button>
+        </div>
       </div>
 
       {/* Summary gauges */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-lg p-5 text-center">
           <ResponsiveContainer width="100%" height={100}>
             <RadialBarChart innerRadius="70%" outerRadius="100%" data={gaugeData} startAngle={180} endAngle={0}>
@@ -91,6 +168,77 @@ export default function ResultsView({ metrics, originalData, anonymizedData }: R
         </motion.div>
       </div>
 
+      {/* New: Additional metric cards row */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        {[
+          { icon: Fingerprint, label: 'k-Anonymity Est.', value: `~${metrics.kAnonymityEstimate}`, color: 'text-primary' },
+          { icon: Layers, label: 'Entropy Loss', value: `${metrics.entropyLoss}%`, color: 'text-warning' },
+          { icon: Activity, label: 'Cluster Preservation', value: `${metrics.clusterPreservation}%`, color: 'text-accent' },
+          { icon: Clock, label: 'Processing Time', value: `${metrics.processingTime}ms`, color: 'text-primary' },
+          { icon: TrendingUp, label: 'Suppression Rate', value: `${metrics.suppressionRate}%`, color: 'text-destructive' },
+        ].map((m, i) => (
+          <motion.div key={m.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.03 }} className="glass-card rounded-lg p-3 text-center">
+            <m.icon className={`w-5 h-5 mx-auto mb-1 ${m.color}`} />
+            <p className={`text-lg font-bold font-mono ${m.color}`}>{m.value}</p>
+            <p className="text-[9px] text-muted-foreground">{m.label}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Radar Chart: Privacy Profile */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card className="glass-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Shield className="w-4 h-4 text-primary" /> Privacy Profile Radar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <RadarChart data={radarData}>
+                <PolarGrid stroke="hsl(220,16%,22%)" />
+                <PolarAngleAxis dataKey="metric" tick={{ fill: 'hsl(215,12%,55%)', fontSize: 10 }} />
+                <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                <Radar name="Score" dataKey="value" stroke="hsl(185,72%,48%)" fill="hsl(185,72%,48%)" fillOpacity={0.2} strokeWidth={2} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        {/* Privacy vs Utility Tradeoff */}
+        <Card className="glass-card border-border">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-accent" /> Privacy–Utility Tradeoff Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {[
+              { label: 'Privacy Level', val: metrics.privacyLevel, color: 'bg-primary' },
+              { label: 'Data Utility', val: metrics.dataUtility, color: 'bg-accent' },
+              { label: 'Temporal Consistency', val: metrics.temporalConsistency, color: 'bg-warning' },
+              { label: 'Cluster Preservation', val: metrics.clusterPreservation, color: 'bg-primary' },
+              { label: 'Info Retained', val: 100 - metrics.informationLoss, color: 'bg-accent' },
+            ].map(bar => (
+              <div key={bar.label}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">{bar.label}</span>
+                  <span className="font-mono font-semibold">{bar.val}%</span>
+                </div>
+                <div className="w-full h-2 bg-muted/30 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${bar.val}%` }}
+                    transition={{ duration: 1, delay: 0.3 }}
+                    className={`h-full rounded-full ${bar.color}`}
+                  />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Extended metrics comparison table */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="glass-card rounded-lg p-5">
         <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
@@ -114,6 +262,9 @@ export default function ResultsView({ metrics, originalData, anonymizedData }: R
               { metric: 'Re-identification Risk', value: `${metrics.reidentificationRisk}%`, good: metrics.reidentificationRisk <= 30 },
               { metric: 'Spatial Distortion', value: `${metrics.spatialDistortion}m`, good: metrics.spatialDistortion <= 50 },
               { metric: 'Temporal Consistency', value: `${metrics.temporalConsistency}%`, good: metrics.temporalConsistency >= 70 },
+              { metric: 'k-Anonymity Estimate', value: `~${metrics.kAnonymityEstimate}`, good: metrics.kAnonymityEstimate >= 5 },
+              { metric: 'Entropy Loss', value: `${metrics.entropyLoss}%`, good: metrics.entropyLoss <= 25 },
+              { metric: 'Cluster Preservation', value: `${metrics.clusterPreservation}%`, good: metrics.clusterPreservation >= 70 },
               { metric: 'Processing Time', value: `${metrics.processingTime}ms`, good: metrics.processingTime <= 1000 },
               { metric: 'Epsilon (ε)', value: `${metrics.epsilonUsed}`, good: metrics.epsilonUsed <= 1.0 },
               { metric: 'l-Value', value: `${metrics.lValueUsed}`, good: metrics.lValueUsed >= 3 },
