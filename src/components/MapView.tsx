@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { TrajectoryPoint } from '@/lib/trajectoryUtils';
+import { TrajectoryPoint, LOCATION_SENSITIVITY } from '@/lib/trajectoryUtils';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Layers } from 'lucide-react';
+import { Eye, EyeOff, Layers, Flame } from 'lucide-react';
 
 interface MapViewProps {
   originalData: TrajectoryPoint[];
@@ -13,12 +13,12 @@ export default function MapView({ originalData, anonymizedData }: MapViewProps) 
   const mapInstanceRef = useRef<any>(null);
   const [showOriginal, setShowOriginal] = useState(true);
   const [showAnonymized, setShowAnonymized] = useState(true);
+  const [showHeatmap, setShowHeatmap] = useState(false);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const heatLayersRef = useRef<any[]>([]);
 
   useEffect(() => {
-    // Dynamically import leaflet
     import('leaflet').then((L) => {
-      // Fix default icon issue
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
@@ -50,14 +50,93 @@ export default function MapView({ originalData, anonymizedData }: MapViewProps) 
     };
   }, []);
 
+  // Draw heatmap using canvas overlay
+  useEffect(() => {
+    if (!leafletLoaded || !mapInstanceRef.current) return;
+
+    // Remove old heat layers
+    heatLayersRef.current.forEach(l => {
+      try { mapInstanceRef.current.removeLayer(l); } catch {}
+    });
+    heatLayersRef.current = [];
+
+    if (!showHeatmap) return;
+
+    import('leaflet').then((L) => {
+      const map = mapInstanceRef.current;
+
+      const createHeatCanvas = (points: TrajectoryPoint[], color: string, label: string) => {
+        const HeatOverlay = L.Layer.extend({
+          onAdd(map: any) {
+            this._map = map;
+            this._canvas = L.DomUtil.create('canvas', 'leaflet-heatmap-canvas');
+            this._canvas.style.position = 'absolute';
+            this._canvas.style.pointerEvents = 'none';
+            const pane = map.getPane('overlayPane');
+            pane.appendChild(this._canvas);
+            map.on('moveend zoomend resize', this._draw, this);
+            this._draw();
+          },
+          onRemove(map: any) {
+            map.off('moveend zoomend resize', this._draw, this);
+            if (this._canvas && this._canvas.parentNode) {
+              this._canvas.parentNode.removeChild(this._canvas);
+            }
+          },
+          _draw() {
+            const map = this._map;
+            const size = map.getSize();
+            const canvas = this._canvas;
+            canvas.width = size.x;
+            canvas.height = size.y;
+            const topLeft = map.containerPointToLayerPoint([0, 0]);
+            L.DomUtil.setPosition(canvas, topLeft);
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            ctx.clearRect(0, 0, size.x, size.y);
+
+            const radius = 20;
+            points.forEach(p => {
+              const pt = map.latLngToContainerPoint([p.lat, p.lng]);
+              const sensitivity = p.locationType ? LOCATION_SENSITIVITY[p.locationType] / 100 : 0.3;
+              const intensity = 0.15 + sensitivity * 0.5;
+
+              const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, radius);
+              grad.addColorStop(0, color.replace(')', `, ${intensity})`).replace('rgb', 'rgba'));
+              grad.addColorStop(1, color.replace(')', ', 0)').replace('rgb', 'rgba'));
+              ctx.beginPath();
+              ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+              ctx.fillStyle = grad;
+              ctx.fill();
+            });
+          },
+        });
+        return new HeatOverlay();
+      };
+
+      if (showOriginal && originalData.length > 0) {
+        const layer = createHeatCanvas(originalData, 'rgb(34, 184, 207)', 'Original');
+        layer.addTo(map);
+        heatLayersRef.current.push(layer);
+      }
+      if (showAnonymized && anonymizedData.length > 0) {
+        const layer = createHeatCanvas(anonymizedData, 'rgb(56, 217, 169)', 'Anonymized');
+        layer.addTo(map);
+        heatLayersRef.current.push(layer);
+      }
+    });
+  }, [originalData, anonymizedData, showOriginal, showAnonymized, showHeatmap, leafletLoaded]);
+
   useEffect(() => {
     if (!leafletLoaded || !mapInstanceRef.current) return;
 
     import('leaflet').then((L) => {
       const map = mapInstanceRef.current;
-      // Clear existing layers except tile layer
       map.eachLayer((layer: any) => {
-        if (!(layer instanceof L.TileLayer)) map.removeLayer(layer);
+        if (!(layer instanceof L.TileLayer) && !heatLayersRef.current.includes(layer)) {
+          map.removeLayer(layer);
+        }
       });
 
       if (showOriginal && originalData.length > 0) {
@@ -110,6 +189,15 @@ export default function MapView({ originalData, anonymizedData }: MapViewProps) 
         </div>
         <div className="flex gap-2">
           <button
+            onClick={() => setShowHeatmap(!showHeatmap)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all border ${
+              showHeatmap ? 'bg-warning/20 text-warning border-warning/30' : 'bg-secondary text-muted-foreground border-border'
+            }`}
+          >
+            <Flame className="w-3 h-3" />
+            Heatmap
+          </button>
+          <button
             onClick={() => setShowOriginal(!showOriginal)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all border ${
               showOriginal ? 'bg-primary/20 text-primary border-primary/30' : 'bg-secondary text-muted-foreground border-border'
@@ -143,7 +231,7 @@ export default function MapView({ originalData, anonymizedData }: MapViewProps) 
       </motion.div>
 
       {hasData && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="glass-card rounded-lg p-3 flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-primary" />
             <span className="text-xs text-muted-foreground">Original: {originalData.length} points</span>
@@ -152,7 +240,35 @@ export default function MapView({ originalData, anonymizedData }: MapViewProps) 
             <div className="w-3 h-3 rounded-full bg-accent" />
             <span className="text-xs text-muted-foreground">Anonymized: {anonymizedData.length} points</span>
           </div>
+          <div className="glass-card rounded-lg p-3 flex items-center gap-2">
+            <Flame className="w-3 h-3 text-warning" />
+            <span className="text-xs text-muted-foreground">Heatmap: Density + Sensitivity</span>
+          </div>
         </div>
+      )}
+
+      {hasData && showHeatmap && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="glass-card rounded-lg p-4">
+          <h3 className="text-xs font-semibold mb-2 flex items-center gap-2">
+            <Flame className="w-3.5 h-3.5 text-warning" />
+            Heatmap Legend — Sensitivity Zones
+          </h3>
+          <p className="text-[10px] text-muted-foreground mb-3">
+            Brighter areas indicate higher location sensitivity (hospitals, homes). The heatmap intensity is weighted by the privacy risk of each location type.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            {(['hospital', 'home', 'government', 'bank', 'office', 'park'] as const).map(type => (
+              <div key={type} className="flex items-center gap-1.5 bg-muted/30 rounded px-2 py-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  LOCATION_SENSITIVITY[type] >= 70 ? 'bg-destructive' :
+                  LOCATION_SENSITIVITY[type] >= 40 ? 'bg-warning' : 'bg-accent'
+                }`} />
+                <span className="text-[10px] capitalize">{type}</span>
+                <span className="text-[10px] text-muted-foreground font-mono">{LOCATION_SENSITIVITY[type]}%</span>
+              </div>
+            ))}
+          </div>
+        </motion.div>
       )}
     </div>
   );
