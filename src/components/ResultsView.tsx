@@ -140,6 +140,7 @@ export default function ResultsView({ metrics, originalData, anonymizedData }: R
           </ResponsiveContainer>
           <p className="text-2xl font-bold font-mono text-primary -mt-4">{metrics.privacyLevel}%</p>
           <p className="text-[10px] text-muted-foreground mt-1">Privacy Level</p>
+          <p className="text-[9px] text-muted-foreground/70 mt-0.5">Overall privacy strength based on ε, l-value and suppression</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card rounded-lg p-5 text-center">
@@ -153,34 +154,38 @@ export default function ResultsView({ metrics, originalData, anonymizedData }: R
           </ResponsiveContainer>
           <p className="text-2xl font-bold font-mono text-accent">{metrics.dataUtility}%</p>
           <p className="text-[10px] text-muted-foreground mt-1">Data Utility</p>
+          <p className="text-[9px] text-muted-foreground/70 mt-0.5">How much analytical value remains after anonymization</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-lg p-5 flex flex-col items-center justify-center">
           <Ruler className="w-7 h-7 text-warning mb-2" />
           <p className="text-2xl font-bold font-mono text-warning">{metrics.averageDisplacement}m</p>
           <p className="text-[10px] text-muted-foreground mt-1">Avg. Displacement</p>
+          <p className="text-[9px] text-muted-foreground/70 mt-0.5">Average distance each point moved from its original position</p>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card rounded-lg p-5 flex flex-col items-center justify-center">
           <AlertTriangle className={`w-7 h-7 mb-2 ${riskColor(metrics.reidentificationRisk)}`} />
           <p className={`text-2xl font-bold font-mono ${riskColor(metrics.reidentificationRisk)}`}>{metrics.reidentificationRisk}%</p>
           <p className="text-[10px] text-muted-foreground mt-1">Re-identification Risk</p>
+          <p className="text-[9px] text-muted-foreground/70 mt-0.5">Likelihood an attacker can link data back to individuals</p>
         </motion.div>
       </div>
 
       {/* New: Additional metric cards row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { icon: Fingerprint, label: 'k-Anonymity Est.', value: `~${metrics.kAnonymityEstimate}`, color: 'text-primary' },
-          { icon: Layers, label: 'Entropy Loss', value: `${metrics.entropyLoss}%`, color: 'text-warning' },
-          { icon: Activity, label: 'Cluster Preservation', value: `${metrics.clusterPreservation}%`, color: 'text-accent' },
-          { icon: Clock, label: 'Processing Time', value: `${metrics.processingTime}ms`, color: 'text-primary' },
-          { icon: TrendingUp, label: 'Suppression Rate', value: `${metrics.suppressionRate}%`, color: 'text-destructive' },
+          { icon: Fingerprint, label: 'k-Anonymity Est.', value: `~${metrics.kAnonymityEstimate}`, color: 'text-primary', hint: 'Min. group size making individuals indistinguishable' },
+          { icon: Layers, label: 'Entropy Loss', value: `${metrics.entropyLoss}%`, color: 'text-warning', hint: 'Information diversity lost during anonymization' },
+          { icon: Activity, label: 'Cluster Preservation', value: `${metrics.clusterPreservation}%`, color: 'text-accent', hint: 'How well spatial clusters are maintained' },
+          { icon: Clock, label: 'Processing Time', value: `${metrics.processingTime}ms`, color: 'text-primary', hint: 'Time taken to run all privacy algorithms' },
+          { icon: TrendingUp, label: 'Suppression Rate', value: `${metrics.suppressionRate}%`, color: 'text-destructive', hint: 'Percentage of data points removed for privacy' },
         ].map((m, i) => (
           <motion.div key={m.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 + i * 0.03 }} className="glass-card rounded-lg p-3 text-center">
             <m.icon className={`w-5 h-5 mx-auto mb-1 ${m.color}`} />
             <p className={`text-lg font-bold font-mono ${m.color}`}>{m.value}</p>
             <p className="text-[9px] text-muted-foreground">{m.label}</p>
+            <p className="text-[8px] text-muted-foreground/60 mt-0.5">{m.hint}</p>
           </motion.div>
         ))}
       </div>
