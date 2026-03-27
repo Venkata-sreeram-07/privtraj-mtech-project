@@ -235,7 +235,7 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   doc.save('PrivTraj_Privacy_Audit_Report.pdf');
 }
 
-
+export default function ResultsView({ metrics, originalData, anonymizedData }: ResultsViewProps) {
   if (!metrics) {
     return (
       <div className="space-y-6">
