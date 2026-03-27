@@ -80,7 +80,162 @@ function exportReport(metrics: PrivacyMetrics) {
   URL.revokeObjectURL(url);
 }
 
-export default function ResultsView({ metrics, originalData, anonymizedData }: ResultsViewProps) {
+function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[], anonymizedData: TrajectoryPoint[]) {
+  const doc = new jsPDF();
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  const contentW = pageW - margin * 2;
+  let y = margin;
+
+  const addFooter = (pageNum: number) => {
+    doc.setFontSize(7);
+    doc.setTextColor(150);
+    doc.text('© Venkata Sreeram — Sri Mittapalli College of Engineering', margin, pageH - 8);
+    doc.text(`Page ${pageNum}`, pageW - margin, pageH - 8, { align: 'right' });
+  };
+
+  const checkPage = (needed: number) => {
+    if (y + needed > pageH - 25) {
+      addFooter(doc.getNumberOfPages());
+      doc.addPage();
+      doc.setDrawColor(34, 184, 207);
+      doc.setLineWidth(0.5);
+      doc.line(margin, 12, pageW - margin, 12);
+      doc.setFontSize(7);
+      doc.setTextColor(150);
+      doc.text('PrivTraj — Privacy Audit Report', margin, 10);
+      y = 20;
+    }
+  };
+
+  // Cover
+  doc.setFillColor(15, 20, 25);
+  doc.rect(0, 0, pageW, pageH, 'F');
+  doc.setFontSize(36);
+  doc.setTextColor(34, 184, 207);
+  doc.text('PrivTraj', pageW / 2, 80, { align: 'center' });
+  doc.setFontSize(14);
+  doc.setTextColor(200);
+  doc.text('Privacy Audit Report', pageW / 2, 95, { align: 'center' });
+  doc.setFontSize(10);
+  doc.setTextColor(150);
+  doc.text('Privacy-Preserving Trajectory Data Analytics', pageW / 2, 110, { align: 'center' });
+  doc.setFontSize(11);
+  doc.setTextColor(180);
+  doc.text('Venkata Sreeram', pageW / 2, 140, { align: 'center' });
+  doc.setFontSize(9);
+  doc.setTextColor(130);
+  doc.text('MTech Student — Sri Mittapalli College of Engineering', pageW / 2, 150, { align: 'center' });
+  doc.text(`Report Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageW / 2, 165, { align: 'center' });
+
+  doc.setFillColor(20, 28, 35);
+  doc.roundedRect(30, 185, contentW - 20, 55, 3, 3, 'F');
+  doc.setFontSize(10);
+  doc.setTextColor(34, 184, 207);
+  doc.text('REPORT SUMMARY', 40, 198);
+  doc.setFontSize(9);
+  doc.setTextColor(180);
+  [`Privacy Level: ${metrics.privacyLevel}%  |  Data Utility: ${metrics.dataUtility}%  |  Re-ID Risk: ${metrics.reidentificationRisk}%`,
+   `Points: ${metrics.pointsOriginal} → ${metrics.pointsAnonymized}  |  Suppression: ${metrics.suppressionRate}%  |  Displacement: ${metrics.averageDisplacement}m`,
+   `Config: ε=${metrics.epsilonUsed}, l=${metrics.lValueUsed}, Noise=${metrics.noiseTypeUsed}`
+  ].forEach((l, i) => doc.text(l, 40, 212 + i * 12));
+
+  addFooter(1);
+
+  // Page 2: Metrics
+  doc.addPage();
+  y = 25;
+  doc.setFontSize(16);
+  doc.setTextColor(34, 184, 207);
+  doc.text('1. Privacy & Utility Metrics', margin, y);
+  y += 12;
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['Metric', 'Value', 'Status']],
+    body: [
+      ['Privacy Level', `${metrics.privacyLevel}%`, metrics.privacyLevel >= 70 ? '✓ Good' : '✗ Low'],
+      ['Data Utility', `${metrics.dataUtility}%`, metrics.dataUtility >= 60 ? '✓ Good' : '✗ Low'],
+      ['Re-identification Risk', `${metrics.reidentificationRisk}%`, metrics.reidentificationRisk <= 30 ? '✓ Low' : '✗ High'],
+      ['Suppression Rate', `${metrics.suppressionRate}%`, metrics.suppressionRate <= 40 ? '✓ OK' : '✗ High'],
+      ['Avg. Displacement', `${metrics.averageDisplacement}m`, '—'],
+      ['Temporal Consistency', `${metrics.temporalConsistency}%`, metrics.temporalConsistency >= 70 ? '✓ Good' : '✗ Low'],
+      ['k-Anonymity Estimate', `~${metrics.kAnonymityEstimate}`, metrics.kAnonymityEstimate >= 5 ? '✓ Strong' : '✗ Weak'],
+      ['Entropy Loss', `${metrics.entropyLoss}%`, metrics.entropyLoss <= 25 ? '✓ Low' : '✗ High'],
+      ['Cluster Preservation', `${metrics.clusterPreservation}%`, metrics.clusterPreservation >= 70 ? '✓ Good' : '✗ Low'],
+      ['Processing Time', `${metrics.processingTime}ms`, '✓'],
+    ],
+    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 9 },
+    bodyStyles: { fontSize: 8 },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    theme: 'grid',
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 15;
+  checkPage(60);
+  doc.setFontSize(16);
+  doc.setTextColor(34, 184, 207);
+  doc.text('2. Privacy Risk by Location Type', margin, y);
+  y += 12;
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['Location', 'Sensitivity', 'Points', 'Risk']],
+    body: metrics.privacyRiskByType.sort((a, b) => b.risk - a.risk).map(r => [
+      r.type.charAt(0).toUpperCase() + r.type.slice(1),
+      `${LOCATION_SENSITIVITY[r.type]}%`,
+      `${r.count}`,
+      `${r.risk}% ${r.risk >= 70 ? '(HIGH)' : r.risk >= 40 ? '(MED)' : '(LOW)'}`,
+    ]),
+    headStyles: { fillColor: [245, 158, 11], textColor: 255, fontSize: 9 },
+    bodyStyles: { fontSize: 8 },
+    alternateRowStyles: { fillColor: [255, 251, 235] },
+    theme: 'grid',
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 15;
+  checkPage(80);
+  doc.setFontSize(16);
+  doc.setTextColor(34, 184, 207);
+  doc.text('3. Sample Data Comparison', margin, y);
+  y += 12;
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['#', 'Orig Lat', 'Orig Lng', 'Anon Lat', 'Anon Lng', 'Type']],
+    body: originalData.slice(0, 15).map((p, i) => [
+      `${i + 1}`, p.lat.toFixed(5), p.lng.toFixed(5),
+      anonymizedData[i]?.lat.toFixed(5) ?? '—', anonymizedData[i]?.lng.toFixed(5) ?? '—',
+      p.locationType || '—',
+    ]),
+    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
+    bodyStyles: { fontSize: 7 },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    theme: 'grid',
+  });
+
+  y = (doc as any).lastAutoTable.finalY + 15;
+  checkPage(50);
+  doc.setFontSize(14);
+  doc.setTextColor(34, 184, 207);
+  doc.text('Conclusion', margin, y);
+  y += 10;
+  doc.setFontSize(9);
+  doc.setTextColor(60);
+  [
+    `This report was generated by PrivTraj v1.0 on ${new Date().toLocaleDateString()}.`,
+    `Anonymization: l-Diversity (l=${metrics.lValueUsed}) + ${metrics.noiseTypeUsed} DP (ε=${metrics.epsilonUsed}).`,
+    `Privacy Level: ${metrics.privacyLevel}% | Data Utility: ${metrics.dataUtility}% | Re-ID Risk: ${metrics.reidentificationRisk}%`,
+    '',
+    'Developed by Venkata Sreeram, MTech Student, Sri Mittapalli College of Engineering.',
+  ].forEach(l => { doc.text(l, margin, y); y += 5; });
+
+  addFooter(doc.getNumberOfPages());
+  doc.save('PrivTraj_Privacy_Audit_Report.pdf');
+}
+
+
   if (!metrics) {
     return (
       <div className="space-y-6">
