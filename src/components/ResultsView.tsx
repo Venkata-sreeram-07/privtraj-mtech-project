@@ -281,8 +281,11 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
           <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={() => exportCSV(originalData, 'original_trajectories.csv')}>
             <Download className="w-3.5 h-3.5" /> Original CSV
           </Button>
-          <Button size="sm" className="gap-2 text-xs" onClick={() => exportReport(metrics)}>
-            <BarChart3 className="w-3.5 h-3.5" /> Export Report
+          <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={() => exportReport(metrics)}>
+            <BarChart3 className="w-3.5 h-3.5" /> JSON Report
+          </Button>
+          <Button size="sm" className="gap-2 text-xs" onClick={() => exportPDFReport(metrics, originalData, anonymizedData)}>
+            <FileText className="w-3.5 h-3.5" /> PDF Report
           </Button>
         </div>
       </div>
