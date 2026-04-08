@@ -93,143 +93,358 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
     doc.setTextColor(150);
     doc.text('© Venkata Sreeram — Sri Mittapalli College of Engineering', margin, pageH - 8);
     doc.text(`Page ${pageNum}`, pageW - margin, pageH - 8, { align: 'right' });
+    doc.text('PrivTraj v1.0 — Confidential Privacy Audit Report', pageW / 2, pageH - 8, { align: 'center' });
+  };
+
+  const newPage = () => {
+    addFooter(doc.getNumberOfPages());
+    doc.addPage();
+    doc.setDrawColor(34, 184, 207);
+    doc.setLineWidth(0.5);
+    doc.line(margin, 12, pageW - margin, 12);
+    doc.setFontSize(7);
+    doc.setTextColor(150);
+    doc.text('PrivTraj — Privacy Audit Report', margin, 10);
+    y = 20;
   };
 
   const checkPage = (needed: number) => {
-    if (y + needed > pageH - 25) {
-      addFooter(doc.getNumberOfPages());
-      doc.addPage();
-      doc.setDrawColor(34, 184, 207);
-      doc.setLineWidth(0.5);
-      doc.line(margin, 12, pageW - margin, 12);
-      doc.setFontSize(7);
-      doc.setTextColor(150);
-      doc.text('PrivTraj — Privacy Audit Report', margin, 10);
-      y = 20;
-    }
+    if (y + needed > pageH - 25) newPage();
   };
 
-  // Cover
+  const sectionTitle = (num: string, title: string) => {
+    checkPage(20);
+    doc.setFontSize(16);
+    doc.setTextColor(34, 184, 207);
+    doc.text(`${num}. ${title}`, margin, y);
+    y += 10;
+  };
+
+  const subTitle = (title: string) => {
+    checkPage(15);
+    doc.setFontSize(11);
+    doc.setTextColor(50, 50, 50);
+    doc.text(title, margin, y);
+    y += 7;
+  };
+
+  const bodyText = (text: string) => {
+    doc.setFontSize(9);
+    doc.setTextColor(60);
+    const lines = doc.splitTextToSize(text, contentW);
+    lines.forEach((l: string) => { checkPage(6); doc.text(l, margin, y); y += 5; });
+    y += 3;
+  };
+
+  // ===== COVER PAGE =====
   doc.setFillColor(15, 20, 25);
   doc.rect(0, 0, pageW, pageH, 'F');
+  doc.setDrawColor(34, 184, 207);
+  doc.setLineWidth(1);
+  doc.line(30, 60, pageW - 30, 60);
   doc.setFontSize(36);
   doc.setTextColor(34, 184, 207);
-  doc.text('PrivTraj', pageW / 2, 80, { align: 'center' });
+  doc.text('PrivTraj', pageW / 2, 85, { align: 'center' });
   doc.setFontSize(14);
   doc.setTextColor(200);
-  doc.text('Privacy Audit Report', pageW / 2, 95, { align: 'center' });
+  doc.text('Privacy Audit Report', pageW / 2, 100, { align: 'center' });
   doc.setFontSize(10);
   doc.setTextColor(150);
-  doc.text('Privacy-Preserving Trajectory Data Analytics', pageW / 2, 110, { align: 'center' });
+  doc.text('Privacy-Preserving Trajectory Data Analytics', pageW / 2, 115, { align: 'center' });
+  doc.line(30, 125, pageW - 30, 125);
+
   doc.setFontSize(11);
   doc.setTextColor(180);
-  doc.text('Venkata Sreeram', pageW / 2, 140, { align: 'center' });
+  doc.text('Prepared by: Venkata Sreeram', pageW / 2, 145, { align: 'center' });
   doc.setFontSize(9);
   doc.setTextColor(130);
-  doc.text('MTech Student — Sri Mittapalli College of Engineering', pageW / 2, 150, { align: 'center' });
-  doc.text(`Report Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageW / 2, 165, { align: 'center' });
+  doc.text('MTech Student — Sri Mittapalli College of Engineering', pageW / 2, 155, { align: 'center' });
+  doc.text(`Report Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageW / 2, 168, { align: 'center' });
 
+  // Summary box on cover
   doc.setFillColor(20, 28, 35);
-  doc.roundedRect(30, 185, contentW - 20, 55, 3, 3, 'F');
+  doc.roundedRect(25, 185, contentW - 10, 70, 3, 3, 'F');
   doc.setFontSize(10);
   doc.setTextColor(34, 184, 207);
-  doc.text('REPORT SUMMARY', 40, 198);
+  doc.text('EXECUTIVE SUMMARY', 35, 200);
   doc.setFontSize(9);
   doc.setTextColor(180);
-  [`Privacy Level: ${metrics.privacyLevel}%  |  Data Utility: ${metrics.dataUtility}%  |  Re-ID Risk: ${metrics.reidentificationRisk}%`,
-   `Points: ${metrics.pointsOriginal} → ${metrics.pointsAnonymized}  |  Suppression: ${metrics.suppressionRate}%  |  Displacement: ${metrics.averageDisplacement}m`,
-   `Config: ε=${metrics.epsilonUsed}, l=${metrics.lValueUsed}, Noise=${metrics.noiseTypeUsed}`
-  ].forEach((l, i) => doc.text(l, 40, 212 + i * 12));
-
+  const summaryLines = [
+    `Privacy Level: ${metrics.privacyLevel}%  |  Data Utility: ${metrics.dataUtility}%  |  Re-ID Risk: ${metrics.reidentificationRisk}%`,
+    `Points Processed: ${metrics.pointsOriginal} original -> ${metrics.pointsAnonymized} anonymized  |  Suppression: ${metrics.suppressionRate}%`,
+    `Configuration: Epsilon=${metrics.epsilonUsed}, l-Value=${metrics.lValueUsed}, Noise=${metrics.noiseTypeUsed}`,
+    `Avg. Displacement: ${metrics.averageDisplacement}m  |  k-Anonymity: ~${metrics.kAnonymityEstimate}  |  Entropy Loss: ${metrics.entropyLoss}%`,
+  ];
+  summaryLines.forEach((l, i) => doc.text(l, 35, 214 + i * 10));
   addFooter(1);
 
-  // Page 2: Metrics
-  doc.addPage();
-  y = 25;
-  doc.setFontSize(16);
+  // ===== PAGE 2: Table of Contents =====
+  newPage();
+  doc.setFontSize(18);
   doc.setTextColor(34, 184, 207);
-  doc.text('1. Privacy & Utility Metrics', margin, y);
-  y += 12;
+  doc.text('Table of Contents', margin, y); y += 12;
+  doc.setFontSize(10);
+  doc.setTextColor(80);
+  ['1. Privacy & Utility Metrics Overview',
+   '2. Comparison: PrivTraj vs Other Privacy Tools',
+   '3. Algorithm Configuration Details',
+   '4. Privacy Risk by Location Type',
+   '5. Location Type Distribution (Original vs Anonymized)',
+   '6. Privacy Profile Radar Analysis',
+   '7. Processing Pipeline Summary',
+   '8. Sample Data Comparison (Before/After)',
+   '9. Methodology & Technical Notes',
+   '10. Conclusion & Recommendations',
+  ].forEach((item, i) => {
+    doc.text(item, margin + 5, y); y += 8;
+  });
+
+  // ===== PAGE 3: Metrics =====
+  newPage();
+  sectionTitle('1', 'Privacy & Utility Metrics Overview');
+  bodyText('This section presents the comprehensive metrics computed after applying l-Diversity anonymization and Differential Privacy noise injection to the uploaded trajectory dataset. Each metric is evaluated against industry-standard thresholds.');
 
   autoTable(doc, {
     startY: y, margin: { left: margin },
-    head: [['Metric', 'Value', 'Status']],
+    head: [['Metric', 'Value', 'Threshold', 'Status', 'Description']],
     body: [
-      ['Privacy Level', `${metrics.privacyLevel}%`, metrics.privacyLevel >= 70 ? '✓ Good' : '✗ Low'],
-      ['Data Utility', `${metrics.dataUtility}%`, metrics.dataUtility >= 60 ? '✓ Good' : '✗ Low'],
-      ['Re-identification Risk', `${metrics.reidentificationRisk}%`, metrics.reidentificationRisk <= 30 ? '✓ Low' : '✗ High'],
-      ['Suppression Rate', `${metrics.suppressionRate}%`, metrics.suppressionRate <= 40 ? '✓ OK' : '✗ High'],
-      ['Avg. Displacement', `${metrics.averageDisplacement}m`, '—'],
-      ['Temporal Consistency', `${metrics.temporalConsistency}%`, metrics.temporalConsistency >= 70 ? '✓ Good' : '✗ Low'],
-      ['k-Anonymity Estimate', `~${metrics.kAnonymityEstimate}`, metrics.kAnonymityEstimate >= 5 ? '✓ Strong' : '✗ Weak'],
-      ['Entropy Loss', `${metrics.entropyLoss}%`, metrics.entropyLoss <= 25 ? '✓ Low' : '✗ High'],
-      ['Cluster Preservation', `${metrics.clusterPreservation}%`, metrics.clusterPreservation >= 70 ? '✓ Good' : '✗ Low'],
-      ['Processing Time', `${metrics.processingTime}ms`, '✓'],
+      ['Privacy Level', `${metrics.privacyLevel}%`, '>= 70%', metrics.privacyLevel >= 70 ? 'PASS' : 'FAIL', 'Overall privacy strength based on epsilon, l-value and suppression rate'],
+      ['Data Utility', `${metrics.dataUtility}%`, '>= 60%', metrics.dataUtility >= 60 ? 'PASS' : 'FAIL', 'Analytical value remaining after anonymization'],
+      ['Re-identification Risk', `${metrics.reidentificationRisk}%`, '<= 30%', metrics.reidentificationRisk <= 30 ? 'PASS' : 'FAIL', 'Probability of linking anonymized data to individuals'],
+      ['Suppression Rate', `${metrics.suppressionRate}%`, '<= 40%', metrics.suppressionRate <= 40 ? 'PASS' : 'FAIL', 'Percentage of points removed for privacy compliance'],
+      ['Avg. Displacement', `${metrics.averageDisplacement}m`, '< 500m', metrics.averageDisplacement < 500 ? 'PASS' : 'FAIL', 'Average geo-spatial shift applied to each data point'],
+      ['Temporal Consistency', `${metrics.temporalConsistency}%`, '>= 70%', metrics.temporalConsistency >= 70 ? 'PASS' : 'FAIL', 'Preservation of chronological ordering in trajectories'],
+      ['k-Anonymity Estimate', `~${metrics.kAnonymityEstimate}`, '>= 5', metrics.kAnonymityEstimate >= 5 ? 'PASS' : 'FAIL', 'Minimum group size making individuals indistinguishable'],
+      ['Entropy Loss', `${metrics.entropyLoss}%`, '<= 25%', metrics.entropyLoss <= 25 ? 'PASS' : 'FAIL', 'Information diversity lost during anonymization'],
+      ['Cluster Preservation', `${metrics.clusterPreservation}%`, '>= 70%', metrics.clusterPreservation >= 70 ? 'PASS' : 'FAIL', 'How well spatial clusters are maintained'],
+      ['Information Loss', `${metrics.informationLoss}%`, '<= 30%', metrics.informationLoss <= 30 ? 'PASS' : 'FAIL', 'Overall data fidelity reduction'],
+      ['Processing Time', `${metrics.processingTime}ms`, '< 1000ms', metrics.processingTime <= 1000 ? 'PASS' : 'FAIL', 'Time taken to complete all privacy transformations'],
+    ],
+    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 7 },
+    bodyStyles: { fontSize: 7 },
+    columnStyles: { 4: { cellWidth: 55 } },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    theme: 'grid',
+  });
+  y = (doc as any).lastAutoTable.finalY + 12;
+
+  // ===== Comparison Table =====
+  newPage();
+  sectionTitle('2', 'Comparison: PrivTraj vs Other Privacy Tools');
+  bodyText('This table compares PrivTraj against leading privacy frameworks across key capabilities. PrivTraj uniquely combines l-Diversity with Differential Privacy in a location-type-aware hybrid model, providing context-sensitive noise calibration that existing tools lack.');
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['Feature', 'PrivTraj', 'ARX Tool', 'OpenDP', 'Google DP Lib']],
+    body: [
+      ['l-Diversity', 'Yes (Spatial)', 'Yes', 'No', 'No'],
+      ['Differential Privacy', 'Yes (Hybrid)', 'Limited', 'Yes', 'Yes'],
+      ['Location-Type Awareness', 'Yes', 'No', 'No', 'No'],
+      ['Trajectory Visualization', 'Yes (Leaflet)', 'No', 'No', 'No'],
+      ['Heatmap Analysis', 'Yes', 'No', 'No', 'No'],
+      ['PDF Audit Reports', 'Yes', 'No', 'No', 'No'],
+      ['Interactive Dashboard', 'Yes', 'Limited', 'CLI Only', 'CLI Only'],
+      ['Noise Type Selection', 'Laplace + Gaussian', 'Laplace', 'Laplace + Gaussian', 'Laplace + Gaussian'],
+      ['Sensitivity-Aware Noise', 'Yes', 'No', 'No', 'No'],
+      ['Open Source', 'Yes', 'Yes', 'Yes', 'Yes'],
+      ['Real-time Processing', 'Yes', 'Batch Only', 'Batch Only', 'Batch Only'],
+      ['Privacy Risk Scoring', 'Per Location Type', 'Global Only', 'No', 'No'],
+    ],
+    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
+    bodyStyles: { fontSize: 7 },
+    alternateRowStyles: { fillColor: [240, 248, 250] },
+    theme: 'grid',
+  });
+  y = (doc as any).lastAutoTable.finalY + 12;
+
+  // ===== Algorithm Config =====
+  newPage();
+  sectionTitle('3', 'Algorithm Configuration Details');
+
+  subTitle('3.1 Differential Privacy Parameters');
+  bodyText(`Epsilon (e): ${metrics.epsilonUsed} — Controls the privacy-utility tradeoff. Lower epsilon means stronger privacy but more noise. A value of 1.0 is considered a moderate privacy guarantee suitable for most applications.`);
+  bodyText(`Noise Mechanism: ${metrics.noiseTypeUsed} — ${metrics.noiseTypeUsed === 'laplace' ? 'Laplace noise provides pure differential privacy (e-DP) with heavier tails, offering strong worst-case guarantees.' : 'Gaussian noise provides approximate (e,d)-DP with lighter tails, better suited for high-dimensional data.'}`);
+  bodyText(`Sensitivity: 1.0 — The maximum change a single individual can cause in the query output. For GPS coordinates, this is calibrated to the coordinate precision used.`);
+
+  subTitle('3.2 l-Diversity Configuration');
+  bodyText(`l-Value: ${metrics.lValueUsed} — Minimum number of distinct users required per spatial grid cell. Higher l-values provide stronger privacy by ensuring each region has sufficient diversity, making it harder to infer individual trajectories.`);
+
+  subTitle('3.3 Location-Type Sensitivity Model');
+  bodyText('PrivTraj implements a novel location-type-aware sensitivity model. Sensitive locations like hospitals (90% sensitivity) and homes (85%) receive significantly more privacy noise than less sensitive locations like offices (20%) or parks (15%). This context-aware approach provides stronger protection where it matters most without over-anonymizing non-sensitive data.');
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['Location Type', 'Sensitivity Score', 'Noise Multiplier', 'Privacy Rationale']],
+    body: [
+      ['Hospital', '90%', '1.8x', 'Medical visits reveal health conditions — highest protection'],
+      ['Home', '85%', '1.7x', 'Residential location enables identity linkage attacks'],
+      ['Government', '70%', '1.4x', 'Government visits may reveal legal/immigration status'],
+      ['Bank', '65%', '1.3x', 'Financial locations reveal economic behavior patterns'],
+      ['School', '50%', '1.0x', 'Educational patterns moderately sensitive'],
+      ['Gym', '30%', '0.6x', 'Recreational — low sensitivity'],
+      ['Restaurant', '25%', '0.5x', 'Common social location — low privacy risk'],
+      ['Office', '20%', '0.4x', 'Workplace — generally public information'],
+      ['Shopping', '20%', '0.4x', 'Commercial areas — low sensitivity'],
+      ['Park', '15%', '0.3x', 'Public spaces — minimal privacy concern'],
+    ],
+    headStyles: { fillColor: [245, 158, 11], textColor: 255, fontSize: 8 },
+    bodyStyles: { fontSize: 7 },
+    alternateRowStyles: { fillColor: [255, 251, 235] },
+    theme: 'grid',
+  });
+  y = (doc as any).lastAutoTable.finalY + 12;
+
+  // ===== Privacy Risk by Location =====
+  newPage();
+  sectionTitle('4', 'Privacy Risk by Location Type');
+  bodyText('The following table shows the computed privacy risk for each location type found in the dataset. Risk is calculated based on the inherent sensitivity of the location category, the number of data points, and the effectiveness of the applied anonymization.');
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['Location Type', 'Sensitivity', 'Points', 'Risk Level', 'Assessment']],
+    body: metrics.privacyRiskByType.sort((a, b) => b.risk - a.risk).map(r => [
+      r.type.charAt(0).toUpperCase() + r.type.slice(1),
+      `${LOCATION_SENSITIVITY[r.type]}%`,
+      `${r.count}`,
+      `${r.risk}%`,
+      r.risk >= 70 ? 'HIGH — Additional measures recommended' : r.risk >= 40 ? 'MEDIUM — Acceptable with monitoring' : 'LOW — Adequately protected',
+    ]),
+    headStyles: { fillColor: [220, 53, 69], textColor: 255, fontSize: 8 },
+    bodyStyles: { fontSize: 7 },
+    alternateRowStyles: { fillColor: [255, 245, 245] },
+    theme: 'grid',
+  });
+  y = (doc as any).lastAutoTable.finalY + 12;
+
+  // ===== Location Type Distribution =====
+  checkPage(80);
+  sectionTitle('5', 'Location Type Distribution (Original vs Anonymized)');
+  bodyText('This comparison shows how data distribution changed after anonymization. Higher-sensitivity locations experience greater suppression to protect user privacy.');
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['Location Type', 'Sensitivity', 'Original Count', 'Anonymized Count', 'Retention Rate']],
+    body: Object.entries(metrics.locationTypeDistribution)
+      .filter(([, v]) => v.original > 0)
+      .sort(([, a], [, b]) => b.sensitivityScore - a.sensitivityScore)
+      .map(([type, data]) => [
+        type.charAt(0).toUpperCase() + type.slice(1),
+        `${data.sensitivityScore}%`,
+        `${data.original}`,
+        `${data.anonymized}`,
+        `${data.original > 0 ? Math.round((data.anonymized / data.original) * 100) : 0}%`,
+      ]),
+    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
+    bodyStyles: { fontSize: 7 },
+    alternateRowStyles: { fillColor: [245, 247, 250] },
+    theme: 'grid',
+  });
+  y = (doc as any).lastAutoTable.finalY + 12;
+
+  // ===== Privacy Profile =====
+  newPage();
+  sectionTitle('6', 'Privacy Profile Radar Analysis');
+  bodyText('The privacy profile evaluates the anonymization across six key dimensions. An ideal result would show high scores across all axes, indicating strong privacy without sacrificing data utility.');
+
+  autoTable(doc, {
+    startY: y, margin: { left: margin },
+    head: [['Dimension', 'Score', 'Assessment']],
+    body: [
+      ['Privacy Level', `${metrics.privacyLevel}%`, metrics.privacyLevel >= 70 ? 'Strong' : 'Needs improvement'],
+      ['Data Utility', `${metrics.dataUtility}%`, metrics.dataUtility >= 60 ? 'Good' : 'Low — consider higher epsilon'],
+      ['Temporal Consistency', `${metrics.temporalConsistency}%`, metrics.temporalConsistency >= 70 ? 'Preserved' : 'Degraded'],
+      ['Cluster Preservation', `${metrics.clusterPreservation}%`, metrics.clusterPreservation >= 70 ? 'Maintained' : 'Lost clusters'],
+      ['Low Re-identification', `${100 - metrics.reidentificationRisk}%`, metrics.reidentificationRisk <= 30 ? 'Well protected' : 'Vulnerable'],
+      ['Low Information Loss', `${100 - metrics.informationLoss}%`, metrics.informationLoss <= 30 ? 'Minimal loss' : 'Significant loss'],
     ],
     headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 9 },
     bodyStyles: { fontSize: 8 },
     alternateRowStyles: { fillColor: [245, 247, 250] },
     theme: 'grid',
   });
+  y = (doc as any).lastAutoTable.finalY + 12;
 
-  y = (doc as any).lastAutoTable.finalY + 15;
-  checkPage(60);
-  doc.setFontSize(16);
-  doc.setTextColor(34, 184, 207);
-  doc.text('2. Privacy Risk by Location Type', margin, y);
-  y += 12;
+  // ===== Processing Pipeline =====
+  sectionTitle('7', 'Processing Pipeline Summary');
+  bodyText(`The PrivTraj processing pipeline consists of four stages:`);
+  bodyText(`Stage 1 — Data Ingestion: ${metrics.pointsOriginal} trajectory points were loaded from the uploaded CSV file, each containing latitude, longitude, timestamp, user ID, and location type.`);
+  bodyText(`Stage 2 — Spatial l-Diversity: The trajectory space was divided into grid cells. Cells with fewer than ${metrics.lValueUsed} distinct users were suppressed, removing ${metrics.suppressionRate}% of points.`);
+  bodyText(`Stage 3 — Differential Privacy: ${metrics.noiseTypeUsed.charAt(0).toUpperCase() + metrics.noiseTypeUsed.slice(1)} noise was added with epsilon=${metrics.epsilonUsed}. Location-type-aware sensitivity scaling was applied — sensitive locations received up to 1.8x more noise.`);
+  bodyText(`Stage 4 — Output: ${metrics.pointsAnonymized} anonymized points were produced in ${metrics.processingTime}ms, ready for analysis while preserving individual privacy.`);
 
-  autoTable(doc, {
-    startY: y, margin: { left: margin },
-    head: [['Location', 'Sensitivity', 'Points', 'Risk']],
-    body: metrics.privacyRiskByType.sort((a, b) => b.risk - a.risk).map(r => [
-      r.type.charAt(0).toUpperCase() + r.type.slice(1),
-      `${LOCATION_SENSITIVITY[r.type]}%`,
-      `${r.count}`,
-      `${r.risk}% ${r.risk >= 70 ? '(HIGH)' : r.risk >= 40 ? '(MED)' : '(LOW)'}`,
-    ]),
-    headStyles: { fillColor: [245, 158, 11], textColor: 255, fontSize: 9 },
-    bodyStyles: { fontSize: 8 },
-    alternateRowStyles: { fillColor: [255, 251, 235] },
-    theme: 'grid',
-  });
-
-  y = (doc as any).lastAutoTable.finalY + 15;
-  checkPage(80);
-  doc.setFontSize(16);
-  doc.setTextColor(34, 184, 207);
-  doc.text('3. Sample Data Comparison', margin, y);
-  y += 12;
+  // ===== Sample Data =====
+  newPage();
+  sectionTitle('8', 'Sample Data Comparison (Before & After Anonymization)');
+  bodyText('Below is a sample of trajectory points showing original coordinates alongside their anonymized counterparts. The displacement demonstrates the spatial perturbation applied by the differential privacy mechanism.');
 
   autoTable(doc, {
     startY: y, margin: { left: margin },
-    head: [['#', 'Orig Lat', 'Orig Lng', 'Anon Lat', 'Anon Lng', 'Type']],
-    body: originalData.slice(0, 15).map((p, i) => [
-      `${i + 1}`, p.lat.toFixed(5), p.lng.toFixed(5),
-      anonymizedData[i]?.lat.toFixed(5) ?? '—', anonymizedData[i]?.lng.toFixed(5) ?? '—',
-      p.locationType || '—',
+    head: [['#', 'Orig Lat', 'Orig Lng', 'Anon Lat', 'Anon Lng', 'Type', 'Sensitivity']],
+    body: originalData.slice(0, 25).map((p, i) => [
+      `${i + 1}`,
+      p.lat.toFixed(5),
+      p.lng.toFixed(5),
+      anonymizedData[i]?.lat.toFixed(5) ?? '—',
+      anonymizedData[i]?.lng.toFixed(5) ?? '—',
+      (p.locationType || '—').charAt(0).toUpperCase() + (p.locationType || '—').slice(1),
+      p.locationType ? `${LOCATION_SENSITIVITY[p.locationType]}%` : '—',
     ]),
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
-    bodyStyles: { fontSize: 7 },
+    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 7 },
+    bodyStyles: { fontSize: 6.5 },
     alternateRowStyles: { fillColor: [245, 247, 250] },
     theme: 'grid',
   });
+  y = (doc as any).lastAutoTable.finalY + 12;
 
-  y = (doc as any).lastAutoTable.finalY + 15;
-  checkPage(50);
-  doc.setFontSize(14);
-  doc.setTextColor(34, 184, 207);
-  doc.text('Conclusion', margin, y);
+  // ===== Methodology =====
+  newPage();
+  sectionTitle('9', 'Methodology & Technical Notes');
+
+  subTitle('9.1 l-Diversity for Trajectory Data');
+  bodyText('l-Diversity is an extension of k-anonymity that requires each equivalence class (spatial grid cell) to contain at least l distinct values of sensitive attributes. In PrivTraj, we use user_id as the quasi-identifier within spatial cells. This prevents attribute disclosure attacks where an attacker could infer a specific user\'s presence at a sensitive location.');
+
+  subTitle('9.2 Differential Privacy Mechanisms');
+  bodyText('Differential Privacy provides a mathematical guarantee that the output of an analysis does not significantly change when any single individual\'s data is added or removed. PrivTraj supports two noise mechanisms:');
+  bodyText('Laplace Mechanism: Adds noise drawn from Lap(sensitivity/epsilon). Provides pure epsilon-differential privacy. Best for low-dimensional queries with strong worst-case guarantees.');
+  bodyText('Gaussian Mechanism: Adds noise drawn from N(0, (sensitivity * sqrt(2*ln(1.25/delta)) / epsilon)^2). Provides (epsilon, delta)-differential privacy. Better suited for high-dimensional data and iterative analyses.');
+
+  subTitle('9.3 Hybrid Privacy Model');
+  bodyText('PrivTraj\'s key innovation is combining l-Diversity with Differential Privacy in a location-type-aware framework. First, l-Diversity suppresses under-represented spatial cells. Then, context-sensitive Differential Privacy noise is applied, calibrated by location sensitivity scores. This two-layer approach prevents both identity disclosure (via l-Diversity) and attribute disclosure (via DP), while minimizing utility loss for non-sensitive data.');
+
+  subTitle('9.4 Architecture');
+  bodyText('PrivTraj is built with React 18 + TypeScript for the frontend, using Leaflet for map visualization, Recharts for analytics charts, and jsPDF for report generation. The privacy algorithms run entirely client-side for maximum data security — no trajectory data ever leaves the user\'s browser.');
+
+  // ===== Conclusion =====
+  newPage();
+  sectionTitle('10', 'Conclusion & Recommendations');
+  bodyText(`This privacy audit was conducted by PrivTraj v1.0 on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}. The analysis processed ${metrics.pointsOriginal} trajectory points using a hybrid l-Diversity (l=${metrics.lValueUsed}) and ${metrics.noiseTypeUsed} Differential Privacy (epsilon=${metrics.epsilonUsed}) model.`);
+
+  bodyText(`Key Findings:`);
+  bodyText(`• Privacy Level achieved: ${metrics.privacyLevel}% — ${metrics.privacyLevel >= 70 ? 'meets the recommended threshold for privacy-preserving data sharing.' : 'below recommended threshold. Consider reducing epsilon or increasing l-value.'}`);
+  bodyText(`• Data Utility preserved: ${metrics.dataUtility}% — ${metrics.dataUtility >= 60 ? 'sufficient for meaningful trajectory analysis.' : 'significant utility loss. Consider increasing epsilon for better balance.'}`);
+  bodyText(`• Re-identification Risk: ${metrics.reidentificationRisk}% — ${metrics.reidentificationRisk <= 30 ? 'acceptably low for most applications.' : 'elevated risk. Additional anonymization measures recommended.'}`);
+
+  bodyText('Recommendations:');
+  if (metrics.privacyLevel < 70) bodyText('• Reduce epsilon to strengthen differential privacy guarantees.');
+  if (metrics.reidentificationRisk > 30) bodyText('• Increase l-value to require more user diversity per spatial cell.');
+  if (metrics.dataUtility < 60) bodyText('• Consider using Gaussian noise which may preserve more utility for this dataset size.');
+  bodyText('• Regularly re-audit as new data is added or privacy requirements change.');
+  bodyText('• Consider implementing temporal differential privacy for time-series protection.');
+
   y += 10;
-  doc.setFontSize(9);
-  doc.setTextColor(60);
-  [
-    `This report was generated by PrivTraj v1.0 on ${new Date().toLocaleDateString()}.`,
-    `Anonymization: l-Diversity (l=${metrics.lValueUsed}) + ${metrics.noiseTypeUsed} DP (ε=${metrics.epsilonUsed}).`,
-    `Privacy Level: ${metrics.privacyLevel}% | Data Utility: ${metrics.dataUtility}% | Re-ID Risk: ${metrics.reidentificationRisk}%`,
-    '',
-    'Developed by Venkata Sreeram, MTech Student, Sri Mittapalli College of Engineering.',
-  ].forEach(l => { doc.text(l, margin, y); y += 5; });
+  doc.setDrawColor(34, 184, 207);
+  doc.setLineWidth(0.5);
+  doc.line(margin, y, pageW - margin, y);
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(34, 184, 207);
+  doc.text('Developed by Venkata Sreeram', pageW / 2, y, { align: 'center' });
+  y += 6;
+  doc.setFontSize(8);
+  doc.setTextColor(130);
+  doc.text('MTech Student — Sri Mittapalli College of Engineering', pageW / 2, y, { align: 'center' });
+  y += 6;
+  doc.text('This report is generated automatically by PrivTraj and is intended for academic and research purposes.', pageW / 2, y, { align: 'center' });
 
   addFooter(doc.getNumberOfPages());
   doc.save('PrivTraj_Privacy_Audit_Report.pdf');
