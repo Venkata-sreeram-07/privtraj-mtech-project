@@ -45,6 +45,18 @@ export default function UploadView({ onDataLoaded }: UploadViewProps) {
 
   return (
     <div className="space-y-6">
+      {/* Hidden persistent file input for mobile compatibility */}
+      <input
+        id="trajectory-file-input"
+        type="file"
+        accept=".csv,.txt,.json,text/csv,text/plain,application/json"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFile(file);
+          e.target.value = '';
+        }}
+      />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Upload Trajectory Data</h1>
         <p className="text-sm text-muted-foreground mt-1">Upload GPS trajectory datasets in CSV format</p>
@@ -59,16 +71,7 @@ export default function UploadView({ onDataLoaded }: UploadViewProps) {
         className={`glass-card rounded-xl p-10 text-center cursor-pointer transition-all ${
           dragOver ? 'glow-border scale-[1.01]' : ''
         }`}
-        onClick={() => {
-          const input = document.createElement('input');
-          input.type = 'file';
-          input.accept = '.csv,.txt,.json';
-          input.onchange = (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) handleFile(file);
-          };
-          input.click();
-        }}
+        onClick={() => document.getElementById('trajectory-file-input')?.click()}
       >
         <div className="flex flex-col items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">

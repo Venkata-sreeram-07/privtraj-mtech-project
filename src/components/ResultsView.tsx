@@ -269,23 +269,23 @@ export default function ResultsView({ metrics, originalData, anonymizedData }: R
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Anonymization Results</h1>
           <p className="text-sm text-muted-foreground mt-1">Comprehensive analysis of privacy operations</p>
         </div>
-        <div className="flex gap-2">
-          <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={() => exportCSV(anonymizedData, 'anonymized_trajectories.csv')}>
-            <FileDown className="w-3.5 h-3.5" /> Export CSV
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => exportCSV(anonymizedData, 'anonymized_trajectories.csv')}>
+            <FileDown className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Export</span> CSV
           </Button>
-          <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={() => exportCSV(originalData, 'original_trajectories.csv')}>
-            <Download className="w-3.5 h-3.5" /> Original CSV
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => exportCSV(originalData, 'original_trajectories.csv')}>
+            <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Original</span> CSV
           </Button>
-          <Button size="sm" variant="outline" className="gap-2 text-xs" onClick={() => exportReport(metrics)}>
-            <BarChart3 className="w-3.5 h-3.5" /> JSON Report
+          <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => exportReport(metrics)}>
+            <BarChart3 className="w-3.5 h-3.5" /> JSON
           </Button>
-          <Button size="sm" className="gap-2 text-xs" onClick={() => exportPDFReport(metrics, originalData, anonymizedData)}>
-            <FileText className="w-3.5 h-3.5" /> PDF Report
+          <Button size="sm" className="gap-1.5 text-xs" onClick={() => exportPDFReport(metrics, originalData, anonymizedData)}>
+            <FileText className="w-3.5 h-3.5" /> PDF
           </Button>
         </div>
       </div>
