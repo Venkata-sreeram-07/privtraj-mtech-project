@@ -1,4 +1,4 @@
-import { Shield, Upload, Map, BarChart3, Settings, Database } from 'lucide-react';
+import { Shield, Upload, BarChart3, Settings, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
