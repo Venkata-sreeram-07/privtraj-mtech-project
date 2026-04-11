@@ -271,10 +271,10 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       ['Information Loss', `${metrics.informationLoss}%`, '<= 30%', metrics.informationLoss <= 30 ? '✓ PASS' : '✗ FAIL', 'Overall data fidelity reduction'],
       ['Processing Time', `${metrics.processingTime}ms`, '< 1000ms', metrics.processingTime <= 1000 ? '✓ PASS' : '✗ FAIL', 'Time taken to complete all privacy transformations'],
     ],
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 7 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 7 },
     bodyStyles: { fontSize: 7 },
     columnStyles: { 4: { cellWidth: 55 } },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -346,9 +346,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       ['Real-time Processing', '✓ Yes', 'Batch Only', 'Batch Only', 'Batch Only'],
       ['Privacy Risk Scoring', 'Per Location Type', 'Global Only', '✗ No', '✗ No'],
     ],
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 8 },
     bodyStyles: { fontSize: 7 },
-    alternateRowStyles: { fillColor: [240, 248, 250] },
+    alternateRowStyles: { fillColor: [235, 242, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -450,9 +450,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       `${data.anonymized}`,
       `${data.original > 0 ? Math.round((data.anonymized / data.original) * 100) : 0}%`,
     ]),
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 8 },
     bodyStyles: { fontSize: 7 },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -473,9 +473,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       ['Low Re-identification', `${100 - metrics.reidentificationRisk}%`, metrics.reidentificationRisk <= 30 ? 'Well protected' : 'Vulnerable'],
       ['Low Information Loss', `${100 - metrics.informationLoss}%`, metrics.informationLoss <= 30 ? 'Minimal loss' : 'Significant loss'],
     ],
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 9 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 9 },
     bodyStyles: { fontSize: 8 },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -504,9 +504,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       (p.locationType || '—').charAt(0).toUpperCase() + (p.locationType || '—').slice(1),
       p.locationType ? `${LOCATION_SENSITIVITY[p.locationType]}%` : '—',
     ]),
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 7 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 7 },
     bodyStyles: { fontSize: 6.5 },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
