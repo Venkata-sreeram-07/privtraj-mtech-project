@@ -546,12 +546,12 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   bodyText('• Consider temporal differential privacy for time-series protection.');
 
   y += 10;
-  doc.setDrawColor(34, 184, 207);
+  doc.setDrawColor(212, 175, 55);
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageW - margin, y);
   y += 10;
   doc.setFontSize(10);
-  doc.setTextColor(34, 184, 207);
+  doc.setTextColor(212, 175, 55);
   doc.text('Developed by Venkata Sreeram', pageW / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(8);
