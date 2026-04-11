@@ -697,8 +697,8 @@ export default function LandingPage() {
               </div>
             </div>
           </motion.div>
-
-
+        </div>
+      </section>
 
       {/* ── Live Demo ── */}
       <section id="demo" className="py-24 border-t border-border">
