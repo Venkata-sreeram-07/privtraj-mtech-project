@@ -1,4 +1,4 @@
-import { Shield, Upload, Map, BarChart3, Settings, Database } from 'lucide-react';
+import { Shield, Upload, BarChart3, Settings, Database } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface SidebarProps {
@@ -10,7 +10,6 @@ const navItems = [
   { id: 'upload', icon: Upload, label: 'Upload Data' },
   { id: 'privacy', icon: Shield, label: 'Privacy Config' },
   { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
-  { id: 'map', icon: Map, label: 'Map View' },
   { id: 'results', icon: Database, label: 'Results' },
   { id: 'settings', icon: Settings, label: 'Info & Reference' },
 ];

@@ -116,7 +116,7 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   const addFooter = (pageNum: number) => {
     doc.setFontSize(7);
     doc.setTextColor(120, 140, 160);
-    doc.text('© Venkata Sreeram — Sri Mittapalli College of Engineering', margin, pageH - 8);
+    doc.text('Venkata Sreeram — Sri Mittapalli College of Engineering', margin, pageH - 8);
     doc.text(`Page ${pageNum}`, pageW - margin, pageH - 8, { align: 'right' });
     doc.text('PrivTraj v1.0 — Confidential Privacy Audit Report', pageW / 2, pageH - 8, { align: 'center' });
   };
@@ -124,7 +124,6 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   const newPage = () => {
     addFooter(doc.getNumberOfPages());
     doc.addPage();
-    // Top accent bar on each page
     doc.setFillColor(212, 175, 55);
     doc.rect(0, 0, pageW, 2, 'F');
     doc.setFontSize(7);
@@ -139,104 +138,134 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
 
   const sectionTitle = (num: string, title: string) => {
     checkPage(20);
-    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
     doc.setTextColor(212, 175, 55);
     doc.text(`${num}. ${title}`, margin, y);
-    y += 10;
+    y += 3;
+    doc.setDrawColor(212, 175, 55);
+    doc.setLineWidth(0.3);
+    doc.line(margin, y, margin + doc.getTextWidth(`${num}. ${title}`), y);
+    y += 8;
+    doc.setFont('helvetica', 'normal');
   };
 
   const subTitle = (title: string) => {
     checkPage(15);
-    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
     doc.setTextColor(50, 50, 50);
     doc.text(title, margin, y);
     y += 7;
+    doc.setFont('helvetica', 'normal');
   };
 
   const bodyText = (text: string) => {
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
-    doc.setTextColor(60);
+    doc.setTextColor(60, 60, 60);
     const lines = doc.splitTextToSize(text, contentW);
     lines.forEach((l: string) => { checkPage(6); doc.text(l, margin, y); y += 5; });
     y += 3;
   };
 
   // ===== COVER PAGE =====
-  // Deep navy gradient background
   doc.setFillColor(8, 12, 28);
   doc.rect(0, 0, pageW, pageH, 'F');
 
-  // Top golden accent line
+  // Top golden accent
   doc.setFillColor(212, 175, 55);
   doc.rect(0, 0, pageW, 4, 'F');
 
-  // Decorative side bars
+  // Side accent bars
   doc.setFillColor(212, 175, 55);
-  doc.rect(0, 50, 5, 50, 'F');
-  doc.rect(pageW - 5, 50, 5, 50, 'F');
+  doc.rect(0, 40, 5, 60, 'F');
+  doc.rect(pageW - 5, 40, 5, 60, 'F');
 
-  // Decorative diamond pattern
+  // PrivTraj Shield Logo
+  const cx = pageW / 2;
+  doc.setFillColor(212, 175, 55);
   doc.setDrawColor(212, 175, 55);
-  doc.setLineWidth(0.3);
-  doc.line(pageW / 2 - 40, 55, pageW / 2, 45);
-  doc.line(pageW / 2, 45, pageW / 2 + 40, 55);
-  doc.line(pageW / 2 + 40, 55, pageW / 2, 65);
-  doc.line(pageW / 2, 65, pageW / 2 - 40, 55);
+  // Shield outline
+  doc.setLineWidth(1.5);
+  const shieldTop = 50;
+  const sw = 28, sh = 34;
+  doc.lines([
+    [sw / 2, 0],
+    [sw / 2, 0],
+    [0, sh * 0.55],
+    [-sw / 2, sh * 0.45],
+    [-sw / 2, -sh * 0.45],
+    [0, -sh * 0.55],
+  ], cx - sw / 2, shieldTop, [1, 1], 'S', false);
+  // Lock icon inside shield
+  doc.setFillColor(212, 175, 55);
+  doc.circle(cx, shieldTop + 17, 4, 'S');
+  doc.rect(cx - 5, shieldTop + 20, 10, 8, 'S');
 
-  doc.setFontSize(48);
+  // Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(42);
   doc.setTextColor(212, 175, 55);
-  doc.text('PrivTraj', pageW / 2, 90, { align: 'center' });
+  doc.text('PrivTraj', cx, 105, { align: 'center' });
 
-  doc.setFontSize(16);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(14);
   doc.setTextColor(180, 200, 230);
-  doc.text('Privacy Audit Report', pageW / 2, 108, { align: 'center' });
+  doc.text('Privacy Audit Report', cx, 120, { align: 'center' });
 
   doc.setDrawColor(212, 175, 55);
   doc.setLineWidth(0.8);
-  doc.line(50, 118, pageW - 50, 118);
+  doc.line(50, 130, pageW - 50, 130);
 
-  doc.setFontSize(11);
+  doc.setFontSize(10);
   doc.setTextColor(140, 160, 190);
-  doc.text('Privacy-Preserving Trajectory Data Analytics Platform', pageW / 2, 132, { align: 'center' });
+  doc.text('Privacy-Preserving Trajectory Data Analytics Platform', cx, 142, { align: 'center' });
 
-  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
   doc.setTextColor(212, 175, 55);
-  doc.text('Prepared by: Venkata Sreeram', pageW / 2, 155, { align: 'center' });
+  doc.text('Prepared by: Venkata Sreeram', cx, 162, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(120, 140, 170);
-  doc.text('MTech Student — Sri Mittapalli College of Engineering', pageW / 2, 165, { align: 'center' });
-  doc.text(`Report Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageW / 2, 178, { align: 'center' });
+  doc.text('MTech Student — Sri Mittapalli College of Engineering', cx, 172, { align: 'center' });
+  doc.text(`Report Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, cx, 185, { align: 'center' });
 
-  // Executive summary box with gradient-like effect
+  // Executive summary box
   doc.setFillColor(15, 22, 42);
-  doc.roundedRect(20, 195, contentW, 75, 4, 4, 'F');
+  doc.roundedRect(20, 200, contentW, 70, 4, 4, 'F');
   doc.setDrawColor(212, 175, 55);
   doc.setLineWidth(0.5);
-  doc.roundedRect(20, 195, contentW, 75, 4, 4, 'S');
+  doc.roundedRect(20, 200, contentW, 70, 4, 4, 'S');
 
-  doc.setFontSize(11);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
   doc.setTextColor(212, 175, 55);
-  doc.text('EXECUTIVE SUMMARY', 32, 212);
-  doc.setFontSize(9);
+  doc.text('EXECUTIVE SUMMARY', 32, 216);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
   doc.setTextColor(160, 180, 210);
   const summaryLines = [
-    `Privacy Level: ${metrics.privacyLevel}%  |  Data Utility: ${metrics.dataUtility}%  |  Re-ID Risk: ${metrics.reidentificationRisk}%`,
-    `Points Processed: ${metrics.pointsOriginal} original → ${metrics.pointsAnonymized} anonymized  |  Suppression: ${metrics.suppressionRate}%`,
-    `Configuration: Epsilon=${metrics.epsilonUsed}, l-Value=${metrics.lValueUsed}, Noise=${metrics.noiseTypeUsed}`,
-    `Avg. Displacement: ${metrics.averageDisplacement}m  |  k-Anonymity: ~${metrics.kAnonymityEstimate}  |  Entropy Loss: ${metrics.entropyLoss}%`,
+    `Privacy Level: ${metrics.privacyLevel}%   |   Data Utility: ${metrics.dataUtility}%   |   Re-ID Risk: ${metrics.reidentificationRisk}%`,
+    `Points: ${metrics.pointsOriginal} original -> ${metrics.pointsAnonymized} anonymized   |   Suppression: ${metrics.suppressionRate}%`,
+    `Config: Epsilon=${metrics.epsilonUsed}, l-Value=${metrics.lValueUsed}, Noise=${metrics.noiseTypeUsed}`,
+    `Avg Displacement: ${metrics.averageDisplacement}m   |   k-Anonymity: ~${metrics.kAnonymityEstimate}   |   Entropy Loss: ${metrics.entropyLoss}%`,
   ];
-  summaryLines.forEach((l, i) => doc.text(l, 32, 226 + i * 10));
+  summaryLines.forEach((l, i) => doc.text(l, 32, 228 + i * 9));
   addFooter(1);
 
   // ===== TABLE OF CONTENTS =====
   newPage();
-  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
   doc.setTextColor(212, 175, 55);
   doc.text('Table of Contents', margin, y); y += 12;
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.setTextColor(80);
+  doc.setTextColor(80, 80, 80);
   ['1. Privacy & Utility Metrics Overview',
-   '2. Privacy–Utility Visual Analysis',
+   '2. Privacy-Utility Visual Analysis',
    '3. Comparison: PrivTraj vs Other Privacy Tools',
    '4. Algorithm Configuration Details',
    '5. Privacy Risk by Location Type',
