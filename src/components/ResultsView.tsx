@@ -257,13 +257,15 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
 
   // ===== TABLE OF CONTENTS =====
   newPage();
-  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
   doc.setTextColor(212, 175, 55);
   doc.text('Table of Contents', margin, y); y += 12;
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
-  doc.setTextColor(80);
+  doc.setTextColor(80, 80, 80);
   ['1. Privacy & Utility Metrics Overview',
-   '2. Privacy–Utility Visual Analysis',
+   '2. Privacy-Utility Visual Analysis',
    '3. Comparison: PrivTraj vs Other Privacy Tools',
    '4. Algorithm Configuration Details',
    '5. Privacy Risk by Location Type',
