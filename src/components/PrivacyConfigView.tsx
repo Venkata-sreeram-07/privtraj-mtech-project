@@ -76,14 +76,8 @@ export default function PrivacyConfigView({ originalData, onProcessed }: Privacy
             <Slider value={[config.lDiversityValue]} onValueChange={([v]) => setConfig(c => ({ ...c, lDiversityValue: v }))} min={2} max={10} step={1} disabled={!hasData} />
             <p className="text-[10px] text-muted-foreground mt-2">Minimum distinct users per spatial cell. Higher = more private, less utility.</p>
           </div>
-          <div>
-            <div className="flex justify-between text-xs mb-2">
-              <span className="text-muted-foreground">Grid Resolution</span>
-              <span className="font-mono font-semibold text-primary">{config.gridResolution.toFixed(3)}°</span>
-            </div>
-            <Slider value={[config.gridResolution]} onValueChange={([v]) => setConfig(c => ({ ...c, gridResolution: v }))} min={0.001} max={0.02} step={0.001} disabled={!hasData} />
-            <p className="text-[10px] text-muted-foreground mt-2">Size of spatial grid cells in degrees. Smaller = finer resolution but more cells may be suppressed.</p>
-          </div>
+
+
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-lg p-5 space-y-4">

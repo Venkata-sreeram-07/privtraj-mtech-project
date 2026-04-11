@@ -10,7 +10,7 @@ import SettingsView from '@/components/SettingsView';
 import { TrajectoryPoint, PrivacyMetrics } from '@/lib/trajectoryUtils';
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('upload');
   const [originalData, setOriginalData] = useState<TrajectoryPoint[]>([]);
   const [anonymizedData, setAnonymizedData] = useState<TrajectoryPoint[]>([]);
   const [metrics, setMetrics] = useState<PrivacyMetrics | null>(null);
@@ -25,18 +25,36 @@ export default function Index() {
   const handleProcessed = (anonymized: TrajectoryPoint[], newMetrics: PrivacyMetrics) => {
     setAnonymizedData(anonymized);
     setMetrics(newMetrics);
-    setActiveTab('map');
+    // Stay on privacy page — results now render inline below
   };
 
   const renderView = () => {
     switch (activeTab) {
       case 'dashboard': return <DashboardView metrics={metrics} hasData={originalData.length > 0} />;
       case 'upload': return <UploadView onDataLoaded={handleDataLoaded} />;
-      case 'privacy': return <PrivacyConfigView originalData={originalData} onProcessed={handleProcessed} />;
+      case 'privacy':
+        return (
+          <div className="space-y-8">
+            <PrivacyConfigView originalData={originalData} onProcessed={handleProcessed} />
+            {metrics && anonymizedData.length > 0 && (
+              <>
+                <div className="border-t border-border pt-8">
+                  <DashboardView metrics={metrics} hasData={originalData.length > 0} />
+                </div>
+                <div className="border-t border-border pt-8">
+                  <MapView originalData={originalData} anonymizedData={anonymizedData} />
+                </div>
+                <div className="border-t border-border pt-8">
+                  <ResultsView metrics={metrics} originalData={originalData} anonymizedData={anonymizedData} />
+                </div>
+              </>
+            )}
+          </div>
+        );
       case 'map': return <MapView originalData={originalData} anonymizedData={anonymizedData} />;
       case 'results': return <ResultsView metrics={metrics} originalData={originalData} anonymizedData={anonymizedData} />;
       case 'settings': return <SettingsView />;
-      default: return <DashboardView metrics={metrics} hasData={originalData.length > 0} />;
+      default: return <UploadView onDataLoaded={handleDataLoaded} />;
     }
   };
 

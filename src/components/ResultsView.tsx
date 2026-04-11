@@ -115,7 +115,7 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
 
   const addFooter = (pageNum: number) => {
     doc.setFontSize(7);
-    doc.setTextColor(150);
+    doc.setTextColor(120, 140, 160);
     doc.text('© Venkata Sreeram — Sri Mittapalli College of Engineering', margin, pageH - 8);
     doc.text(`Page ${pageNum}`, pageW - margin, pageH - 8, { align: 'right' });
     doc.text('PrivTraj v1.0 — Confidential Privacy Audit Report', pageW / 2, pageH - 8, { align: 'center' });
@@ -124,13 +124,13 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   const newPage = () => {
     addFooter(doc.getNumberOfPages());
     doc.addPage();
-    doc.setDrawColor(34, 184, 207);
-    doc.setLineWidth(0.5);
-    doc.line(margin, 12, pageW - margin, 12);
+    // Top accent bar on each page
+    doc.setFillColor(212, 175, 55);
+    doc.rect(0, 0, pageW, 2, 'F');
     doc.setFontSize(7);
-    doc.setTextColor(150);
+    doc.setTextColor(120, 140, 160);
     doc.text('PrivTraj — Privacy Audit Report', margin, 10);
-    y = 20;
+    y = 18;
   };
 
   const checkPage = (needed: number) => {
@@ -140,7 +140,7 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   const sectionTitle = (num: string, title: string) => {
     checkPage(20);
     doc.setFontSize(16);
-    doc.setTextColor(34, 184, 207);
+    doc.setTextColor(212, 175, 55);
     doc.text(`${num}. ${title}`, margin, y);
     y += 10;
   };
@@ -162,55 +162,76 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   };
 
   // ===== COVER PAGE =====
-  doc.setFillColor(15, 20, 25);
+  // Deep navy gradient background
+  doc.setFillColor(8, 12, 28);
   doc.rect(0, 0, pageW, pageH, 'F');
-  // Decorative accent bars
-  doc.setFillColor(34, 184, 207);
-  doc.rect(0, 55, 6, 40, 'F');
-  doc.rect(pageW - 6, 55, 6, 40, 'F');
-  doc.setDrawColor(34, 184, 207);
-  doc.setLineWidth(1);
-  doc.line(30, 60, pageW - 30, 60);
-  doc.setFontSize(42);
-  doc.setTextColor(34, 184, 207);
-  doc.text('PrivTraj', pageW / 2, 85, { align: 'center' });
-  doc.setFontSize(14);
-  doc.setTextColor(200);
-  doc.text('Privacy Audit Report', pageW / 2, 100, { align: 'center' });
-  doc.setFontSize(10);
-  doc.setTextColor(150);
-  doc.text('Privacy-Preserving Trajectory Data Analytics', pageW / 2, 115, { align: 'center' });
-  doc.line(30, 125, pageW - 30, 125);
+
+  // Top golden accent line
+  doc.setFillColor(212, 175, 55);
+  doc.rect(0, 0, pageW, 4, 'F');
+
+  // Decorative side bars
+  doc.setFillColor(212, 175, 55);
+  doc.rect(0, 50, 5, 50, 'F');
+  doc.rect(pageW - 5, 50, 5, 50, 'F');
+
+  // Decorative diamond pattern
+  doc.setDrawColor(212, 175, 55);
+  doc.setLineWidth(0.3);
+  doc.line(pageW / 2 - 40, 55, pageW / 2, 45);
+  doc.line(pageW / 2, 45, pageW / 2 + 40, 55);
+  doc.line(pageW / 2 + 40, 55, pageW / 2, 65);
+  doc.line(pageW / 2, 65, pageW / 2 - 40, 55);
+
+  doc.setFontSize(48);
+  doc.setTextColor(212, 175, 55);
+  doc.text('PrivTraj', pageW / 2, 90, { align: 'center' });
+
+  doc.setFontSize(16);
+  doc.setTextColor(180, 200, 230);
+  doc.text('Privacy Audit Report', pageW / 2, 108, { align: 'center' });
+
+  doc.setDrawColor(212, 175, 55);
+  doc.setLineWidth(0.8);
+  doc.line(50, 118, pageW - 50, 118);
 
   doc.setFontSize(11);
-  doc.setTextColor(180);
-  doc.text('Prepared by: Venkata Sreeram', pageW / 2, 145, { align: 'center' });
-  doc.setFontSize(9);
-  doc.setTextColor(130);
-  doc.text('MTech Student — Sri Mittapalli College of Engineering', pageW / 2, 155, { align: 'center' });
-  doc.text(`Report Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageW / 2, 168, { align: 'center' });
+  doc.setTextColor(140, 160, 190);
+  doc.text('Privacy-Preserving Trajectory Data Analytics Platform', pageW / 2, 132, { align: 'center' });
 
-  // Summary box
-  doc.setFillColor(20, 28, 35);
-  doc.roundedRect(25, 185, contentW - 10, 70, 3, 3, 'F');
-  doc.setFontSize(10);
-  doc.setTextColor(34, 184, 207);
-  doc.text('EXECUTIVE SUMMARY', 35, 200);
+  doc.setFontSize(12);
+  doc.setTextColor(212, 175, 55);
+  doc.text('Prepared by: Venkata Sreeram', pageW / 2, 155, { align: 'center' });
   doc.setFontSize(9);
-  doc.setTextColor(180);
+  doc.setTextColor(120, 140, 170);
+  doc.text('MTech Student — Sri Mittapalli College of Engineering', pageW / 2, 165, { align: 'center' });
+  doc.text(`Report Date: ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`, pageW / 2, 178, { align: 'center' });
+
+  // Executive summary box with gradient-like effect
+  doc.setFillColor(15, 22, 42);
+  doc.roundedRect(20, 195, contentW, 75, 4, 4, 'F');
+  doc.setDrawColor(212, 175, 55);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(20, 195, contentW, 75, 4, 4, 'S');
+
+  doc.setFontSize(11);
+  doc.setTextColor(212, 175, 55);
+  doc.text('EXECUTIVE SUMMARY', 32, 212);
+  doc.setFontSize(9);
+  doc.setTextColor(160, 180, 210);
   const summaryLines = [
     `Privacy Level: ${metrics.privacyLevel}%  |  Data Utility: ${metrics.dataUtility}%  |  Re-ID Risk: ${metrics.reidentificationRisk}%`,
-    `Points Processed: ${metrics.pointsOriginal} original -> ${metrics.pointsAnonymized} anonymized  |  Suppression: ${metrics.suppressionRate}%`,
+    `Points Processed: ${metrics.pointsOriginal} original → ${metrics.pointsAnonymized} anonymized  |  Suppression: ${metrics.suppressionRate}%`,
     `Configuration: Epsilon=${metrics.epsilonUsed}, l-Value=${metrics.lValueUsed}, Noise=${metrics.noiseTypeUsed}`,
     `Avg. Displacement: ${metrics.averageDisplacement}m  |  k-Anonymity: ~${metrics.kAnonymityEstimate}  |  Entropy Loss: ${metrics.entropyLoss}%`,
   ];
-  summaryLines.forEach((l, i) => doc.text(l, 35, 214 + i * 10));
+  summaryLines.forEach((l, i) => doc.text(l, 32, 226 + i * 10));
   addFooter(1);
 
   // ===== TABLE OF CONTENTS =====
   newPage();
   doc.setFontSize(18);
-  doc.setTextColor(34, 184, 207);
+  doc.setTextColor(212, 175, 55);
   doc.text('Table of Contents', margin, y); y += 12;
   doc.setFontSize(10);
   doc.setTextColor(80);
@@ -250,10 +271,10 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       ['Information Loss', `${metrics.informationLoss}%`, '<= 30%', metrics.informationLoss <= 30 ? '✓ PASS' : '✗ FAIL', 'Overall data fidelity reduction'],
       ['Processing Time', `${metrics.processingTime}ms`, '< 1000ms', metrics.processingTime <= 1000 ? '✓ PASS' : '✗ FAIL', 'Time taken to complete all privacy transformations'],
     ],
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 7 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 7 },
     bodyStyles: { fontSize: 7 },
     columnStyles: { 4: { cellWidth: 55 } },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -325,9 +346,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       ['Real-time Processing', '✓ Yes', 'Batch Only', 'Batch Only', 'Batch Only'],
       ['Privacy Risk Scoring', 'Per Location Type', 'Global Only', '✗ No', '✗ No'],
     ],
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 8 },
     bodyStyles: { fontSize: 7 },
-    alternateRowStyles: { fillColor: [240, 248, 250] },
+    alternateRowStyles: { fillColor: [235, 242, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -429,9 +450,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       `${data.anonymized}`,
       `${data.original > 0 ? Math.round((data.anonymized / data.original) * 100) : 0}%`,
     ]),
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 8 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 8 },
     bodyStyles: { fontSize: 7 },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -452,9 +473,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       ['Low Re-identification', `${100 - metrics.reidentificationRisk}%`, metrics.reidentificationRisk <= 30 ? 'Well protected' : 'Vulnerable'],
       ['Low Information Loss', `${100 - metrics.informationLoss}%`, metrics.informationLoss <= 30 ? 'Minimal loss' : 'Significant loss'],
     ],
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 9 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 9 },
     bodyStyles: { fontSize: 8 },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -483,9 +504,9 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
       (p.locationType || '—').charAt(0).toUpperCase() + (p.locationType || '—').slice(1),
       p.locationType ? `${LOCATION_SENSITIVITY[p.locationType]}%` : '—',
     ]),
-    headStyles: { fillColor: [34, 184, 207], textColor: 255, fontSize: 7 },
+    headStyles: { fillColor: [15, 25, 50], textColor: [212, 175, 55], fontSize: 7 },
     bodyStyles: { fontSize: 6.5 },
-    alternateRowStyles: { fillColor: [245, 247, 250] },
+    alternateRowStyles: { fillColor: [240, 245, 255] },
     theme: 'grid',
   });
   y = (doc as any).lastAutoTable.finalY + 12;
@@ -525,12 +546,12 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   bodyText('• Consider temporal differential privacy for time-series protection.');
 
   y += 10;
-  doc.setDrawColor(34, 184, 207);
+  doc.setDrawColor(212, 175, 55);
   doc.setLineWidth(0.5);
   doc.line(margin, y, pageW - margin, y);
   y += 10;
   doc.setFontSize(10);
-  doc.setTextColor(34, 184, 207);
+  doc.setTextColor(212, 175, 55);
   doc.text('Developed by Venkata Sreeram', pageW / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(8);

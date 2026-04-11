@@ -271,7 +271,7 @@ function FeedbackForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 md:p-8 max-w-lg mx-auto space-y-4">
+    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Full Name *</label>
@@ -326,7 +326,7 @@ export default function LandingPage() {
             <span className="font-bold text-lg gradient-text">PrivTraj</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {['Features', 'Algorithms', 'Architecture', 'Demo', 'How to Use', 'Comparison', 'Use Cases', 'Future', 'About'].map((item) => (
+            {['Features', 'Algorithms', 'Architecture', 'Demo', 'Comparison', 'Use Cases', 'Future', 'About'].map((item) => (
               <button
                 key={item}
                 onClick={() => scrollTo(item.toLowerCase().replace(/ /g, '-'))}
@@ -697,46 +697,6 @@ export default function LandingPage() {
               </div>
             </div>
           </motion.div>
-
-          {/* Expressive Data Flow Pipeline */}
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            <Card className="glass-card border-border overflow-hidden">
-              <CardHeader className="border-b border-border bg-muted/20">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <GitBranch className="w-5 h-5 text-primary" />
-                  Data Processing Pipeline
-                </CardTitle>
-                <CardDescription>End-to-end flow from raw GPS data to privacy-preserving output</CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 md:p-8">
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                  {[
-                    { label: 'Upload CSV', sub: 'Raw GPS Data', icon: CloudUpload, color: 'from-primary/20 to-primary/5', iconColor: 'text-primary', borderColor: 'border-primary/30' },
-                    { label: 'Parse & Validate', sub: 'Schema Check', icon: Filter, color: 'from-primary/20 to-primary/5', iconColor: 'text-primary', borderColor: 'border-primary/30' },
-                    { label: 'Sensitivity Score', sub: 'Location Risk', icon: Fingerprint, color: 'from-warning/20 to-warning/5', iconColor: 'text-warning', borderColor: 'border-warning/30' },
-                    { label: 'l-Diversity', sub: 'Spatial Anon.', icon: Layers, color: 'from-accent/20 to-accent/5', iconColor: 'text-accent', borderColor: 'border-accent/30' },
-                    { label: 'ε-DP Noise', sub: 'Noise Injection', icon: Lock, color: 'from-accent/20 to-accent/5', iconColor: 'text-accent', borderColor: 'border-accent/30' },
-                    { label: 'Risk Analysis', sub: 'Re-ID Scoring', icon: Shield, color: 'from-destructive/20 to-destructive/5', iconColor: 'text-destructive', borderColor: 'border-destructive/30' },
-                    { label: 'Visualize', sub: 'Maps & Charts', icon: MapPinned, color: 'from-primary/20 to-primary/5', iconColor: 'text-primary', borderColor: 'border-primary/30' },
-                  ].map((step, i, arr) => (
-                    <div key={step.label} className="relative">
-                      <div className={`bg-gradient-to-b ${step.color} rounded-xl p-4 border ${step.borderColor} text-center h-full flex flex-col items-center justify-center gap-2`}>
-                        <div className={`w-12 h-12 rounded-xl bg-background/60 border ${step.borderColor} flex items-center justify-center`}>
-                          <step.icon className={`w-6 h-6 ${step.iconColor}`} />
-                        </div>
-                        <p className="text-xs font-bold">{step.label}</p>
-                        <p className="text-[10px] text-muted-foreground">{step.sub}</p>
-                        <Badge variant="outline" className="text-[9px] font-mono">{`Step ${i + 1}`}</Badge>
-                      </div>
-                      {i < arr.length - 1 && (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground absolute -right-3 top-1/2 -translate-y-1/2 hidden lg:block" />
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
         </div>
       </section>
 
@@ -758,81 +718,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── How to Use ── */}
-      <section id="how-to-use" className="py-24 border-t border-border grid-bg">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger} className="text-center max-w-3xl mx-auto mb-16">
-            <motion.p variants={fadeUp} custom={0} className="text-primary font-mono text-sm mb-4 uppercase tracking-widest">Step-by-Step Guide</motion.p>
-            <motion.h2 variants={fadeUp} custom={1} className="text-3xl md:text-5xl font-black mb-6">
-              How to Use <span className="gradient-text">PrivTraj</span>
-            </motion.h2>
-            <motion.p variants={fadeUp} custom={2} className="text-muted-foreground text-lg">
-              Follow these simple steps to anonymize your trajectory data
-            </motion.p>
-          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                step: 1, icon: CloudUpload, title: 'Upload Your Data',
-                desc: 'Prepare a CSV file with columns: latitude, longitude, timestamp, user_id, and location_type. Upload it or load sample data with 750+ records.',
-                detail: 'Supported location types: hospital, home, office, school, shopping, restaurant, gym, park, bank, government.'
-              },
-              {
-                step: 2, icon: SlidersHorizontal, title: 'Configure Privacy Settings',
-                desc: 'Set the l-diversity value (2–10), epsilon for differential privacy (0.1–10), choose Laplace or Gaussian noise, and adjust grid resolution.',
-                detail: 'Higher l-value = more privacy. Lower epsilon = more noise added. You can also configure temporal rounding.'
-              },
-              {
-                step: 3, icon: Play, title: 'Run Processing',
-                desc: 'Click "Apply Privacy Algorithms" to run l-diversity anonymization followed by differential privacy noise injection.',
-                detail: 'Processing happens client-side. Sensitive locations automatically receive amplified noise based on sensitivity scores.'
-              },
-              {
-                step: 4, icon: MapPinned, title: 'View Map Comparison',
-                desc: 'Explore the interactive Leaflet map showing original trajectories (cyan) vs anonymized trajectories (green) side by side.',
-                detail: 'Toggle layers, zoom in/out, and visually assess the spatial displacement applied by the algorithms.'
-              },
-              {
-                step: 5, icon: BarChart, title: 'Analyze Results',
-                desc: 'Review 15+ privacy and utility metrics including privacy level, re-identification risk, entropy loss, cluster preservation, and more.',
-                detail: 'The radar chart and progress bars give you a holistic privacy profile of your anonymized dataset.'
-              },
-              {
-                step: 6, icon: Download, title: 'Export Results',
-                desc: 'Download the anonymized CSV, original data, or a comprehensive JSON privacy report for your documentation.',
-                detail: 'Reports include all metrics, configuration parameters, location-type distributions, and risk analysis.'
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <Card className="glass-card border-border h-full hover:glow-border transition-all duration-300">
-                  <CardHeader>
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                        <item.icon className="w-6 h-6 text-primary" />
-                      </div>
-                      <Badge variant="outline" className="border-primary/30 text-primary font-mono text-xs">
-                        Step {item.step}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-base">{item.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                    <p className="text-xs text-muted-foreground/70 italic">{item.detail}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* ── Comparison Table ── */}
       <section id="comparison" className="py-24 border-t border-border">
@@ -900,7 +787,7 @@ export default function LandingPage() {
                   { img: healthcareImg, title: 'Healthcare & Epidemiology', desc: 'Track disease spread patterns and patient movement while maintaining HIPAA compliance.', stats: ['Contact Tracing', 'HIPAA Compliance', 'Epidemic Analysis'] },
                   { img: transportImg, title: 'Transportation & Logistics', desc: 'Ride-sharing and delivery companies can share anonymized route data for research.', stats: ['Route Planning', 'Fleet Analytics', 'Demand Prediction'] },
                 ].map((useCase) => (
-                  <CarouselItem key={useCase.title} className="md:basis-1/2 lg:basis-1/2">
+                  <CarouselItem key={useCase.title} className="md:basis-1/2 lg:basis-1/3">
                     <Card className="glass-card border-border h-full overflow-hidden">
                       <img src={useCase.img} alt={useCase.title} loading="lazy" width={800} height={512} className="w-full h-48 object-cover" />
                       <CardHeader>
@@ -1038,6 +925,12 @@ export default function LandingPage() {
               Help us shape the future of PrivTraj — your suggestions go directly to our team
             </motion.p>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Feedback Form - Full Width */}
+      <section className="py-16 border-t border-border">
+        <div className="w-full px-6">
           <FeedbackForm />
         </div>
       </section>

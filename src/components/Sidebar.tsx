@@ -7,12 +7,12 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
   { id: 'upload', icon: Upload, label: 'Upload Data' },
   { id: 'privacy', icon: Shield, label: 'Privacy Config' },
+  { id: 'dashboard', icon: BarChart3, label: 'Dashboard' },
   { id: 'map', icon: Map, label: 'Map View' },
   { id: 'results', icon: Database, label: 'Results' },
-  { id: 'settings', icon: Settings, label: 'Settings' },
+  { id: 'settings', icon: Settings, label: 'Info & Reference' },
 ];
 
 export default function AppSidebar({ activeTab, onTabChange }: SidebarProps) {
