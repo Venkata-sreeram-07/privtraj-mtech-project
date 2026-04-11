@@ -231,7 +231,7 @@ function exportPDFReport(metrics: PrivacyMetrics, originalData: TrajectoryPoint[
   // ===== TABLE OF CONTENTS =====
   newPage();
   doc.setFontSize(18);
-  doc.setTextColor(34, 184, 207);
+  doc.setTextColor(212, 175, 55);
   doc.text('Table of Contents', margin, y); y += 12;
   doc.setFontSize(10);
   doc.setTextColor(80);
