@@ -326,7 +326,7 @@ export default function LandingPage() {
             <span className="font-bold text-lg gradient-text">PrivTraj</span>
           </div>
           <div className="hidden md:flex items-center gap-8">
-            {['Features', 'Algorithms', 'Architecture', 'Demo', 'How to Use', 'Comparison', 'Use Cases', 'Future', 'About'].map((item) => (
+            {['Features', 'Algorithms', 'Architecture', 'Demo', 'Comparison', 'Use Cases', 'Future', 'About'].map((item) => (
               <button
                 key={item}
                 onClick={() => scrollTo(item.toLowerCase().replace(/ /g, '-'))}
