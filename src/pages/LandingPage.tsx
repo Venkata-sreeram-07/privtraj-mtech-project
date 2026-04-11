@@ -271,7 +271,7 @@ function FeedbackForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 md:p-8 max-w-lg mx-auto space-y-4">
+    <form onSubmit={handleSubmit} className="glass-card rounded-2xl p-6 md:p-8 max-w-2xl mx-auto space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">Full Name *</label>
