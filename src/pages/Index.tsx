@@ -25,7 +25,7 @@ export default function Index() {
   const handleProcessed = (anonymized: TrajectoryPoint[], newMetrics: PrivacyMetrics) => {
     setAnonymizedData(anonymized);
     setMetrics(newMetrics);
-    // Stay on privacy page — results now render inline below
+    setActiveTab('dashboard');
   };
 
   const renderView = () => {
